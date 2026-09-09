@@ -1,0 +1,253 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { pinoHttp } from 'pino-http';
+import { PrismaClient } from '@prisma/client';
+
+import { getEnv } from './infrastructure/config/environment.js';
+import { getSecurityConfig } from './infrastructure/config/security.js';
+import { logger } from './infrastructure/logging/logger.js';
+import { errorHandler } from './infrastructure/errors/ErrorHandler.js';
+import { RateLimiter } from './infrastructure/security/RateLimiter.js';
+import { InputSanitizer } from './infrastructure/security/InputSanitizer.js';
+
+// Repositories
+import { PrismaUserRepository } from './infrastructure/repositories/PrismaUserRepository.js';
+import { PrismaStudentRepository } from './infrastructure/repositories/PrismaStudentRepository.js';
+import { PrismaRefreshTokenRepository } from './infrastructure/repositories/PrismaRefreshTokenRepository.js';
+import { PrismaSessionRepository } from './infrastructure/repositories/PrismaSessionRepository.js';
+
+// Services
+import { TokenService } from './domain/services/TokenService.js';
+import { PasswordService } from './domain/services/PasswordService.js';
+import { AuthService } from './application/services/auth/AuthService.js';
+import { StudentService } from './application/services/StudentService.js';
+import { LearningSessionService } from './application/services/learning/LearningSessionService.js';
+import { QuestionAttemptService } from './application/services/learning/QuestionAttemptService.js';
+import { MasteryService } from './application/services/learning/MasteryService.js';
+import { ProgressService } from './application/services/learning/ProgressService.js';
+import { NextLearningActionService } from './application/services/learning/NextLearningActionService.js';
+import { AssessmentService } from './application/services/assessment/AssessmentService.js';
+
+// Analytics Services
+import { ProgressService as AnalyticsProgressService } from './application/services/analytics/ProgressService.js';
+import { AnalyticsService } from './application/services/analytics/AnalyticsService.js';
+
+// AI Services
+import { AIErrorAnalysisService } from './application/services/ai/AIErrorAnalysisService.js';
+import { AIRecommendationService } from './application/services/ai/AIRecommendationService.js';
+import { AIExplanationService } from './application/services/ai/AIExplanationService.js';
+import { AIServiceFactory } from './infrastructure/ai/AIServiceFactory.js';
+
+// Controllers
+import { AuthController } from './api/controllers/AuthController.js';
+import { StudentController } from './api/controllers/StudentController.js';
+import { AIController } from './api/controllers/AIController.js';
+import { AssessmentController } from './api/controllers/AssessmentController.js';
+import { AnalyticsController } from './api/controllers/AnalyticsController.js';
+
+// Middleware
+import { AuthMiddleware } from './api/middleware/auth.js';
+import { OwnershipGuard } from './api/middleware/ownership.js';
+
+// Routes
+import { createAuthRoutes } from './api/routes/authRoutes.js';
+import { createStudentRoutes } from './api/routes/studentRoutes.js';
+import { createAIRoutes } from './api/routes/aiRoutes.js';
+import { createAssessmentRoutes } from './api/routes/assessmentRoutes.js';
+import { createAnalyticsRoutes } from './api/routes/analyticsRoutes.js';
+import { createDocsRoutes } from './api/routes/docsRoutes.js';
+
+const prisma = new PrismaClient();
+
+export async function bootstrap() {
+  const env = getEnv();
+  const securityConfig = getSecurityConfig();
+  const app = express();
+
+  // Security Headers
+  app.use(helmet({
+    contentSecurityPolicy: securityConfig.securityHeaders.contentSecurityPolicy,
+    hsts: securityConfig.securityHeaders.hsts,
+    noSniff: securityConfig.securityHeaders.noSniff,
+    xssFilter: securityConfig.securityHeaders.xssProtection,
+    frameguard: securityConfig.securityHeaders.frameOptions,
+    referrerPolicy: securityConfig.securityHeaders.referrerPolicy,
+  }));
+
+  // CORS Configuration
+  app.use(cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = securityConfig.cors.allowedOrigins;
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: securityConfig.cors.allowedMethods,
+    allowedHeaders: securityConfig.cors.allowedHeaders,
+    exposedHeaders: securityConfig.cors.exposedHeaders,
+    maxAge: securityConfig.cors.maxAge,
+    credentials: securityConfig.cors.credentials,
+  }));
+
+  // Logging middleware
+  app.use(pinoHttp({
+    logger,
+    customProps: (req: Request) => ({
+      requestId: req.headers['x-request-id'] || crypto.randomUUID(),
+    }),
+    serializers: {
+      req: (req) => ({
+        method: req.method,
+        url: req.url,
+        headers: {
+          'user-agent': req.headers['user-agent'],
+          'x-request-id': req.headers['x-request-id'],
+        },
+      }),
+    },
+  }));
+
+  // Body size limits
+  app.use(express.json({ limit: securityConfig.input.maxBodySize }));
+  app.use(express.urlencoded({ extended: true, limit: securityConfig.input.maxBodySize }));
+
+  // Input sanitization middleware
+  app.use((req: Request, res: Response, next) => {
+    if (req.body && typeof req.body === 'object') {
+      for (const [key, value] of Object.entries(req.body)) {
+        if (typeof value === 'string') {
+          req.body[key] = InputSanitizer.sanitizeString(value);
+        }
+      }
+    }
+    next();
+  });
+
+  // Health check
+  app.get('/health', async (req: Request, res: Response) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({
+        status: 'ok',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+        environment: env.NODE_ENV,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        database: 'disconnected',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // Initialize repositories
+  const userRepository = new PrismaUserRepository(prisma);
+  const studentRepository = new PrismaStudentRepository(prisma);
+  const refreshTokenRepository = new PrismaRefreshTokenRepository(prisma);
+  const sessionRepository = new PrismaSessionRepository(prisma);
+
+  // Initialize domain services
+  const tokenService = new TokenService();
+  const passwordService = new PasswordService();
+
+  // Initialize AI Provider
+  const aiProvider = AIServiceFactory.getInstance().getProvider();
+
+  // Initialize application services
+  const authService = new AuthService(
+    userRepository,
+    studentRepository,
+    refreshTokenRepository,
+    sessionRepository,
+    tokenService,
+    passwordService
+  );
+  const studentService = new StudentService(studentRepository, userRepository);
+  const learningSessionService = new LearningSessionService(prisma, studentRepository);
+  const questionAttemptService = new QuestionAttemptService(prisma);
+  const masteryService = new MasteryService(prisma);
+  const progressService = new ProgressService(prisma);
+  const nextActionService = new NextLearningActionService(prisma);
+  const assessmentService = new AssessmentService(prisma);
+
+  // Analytics Services
+  const analyticsProgressService = new AnalyticsProgressService(prisma);
+  const analyticsService = new AnalyticsService(prisma);
+
+  // AI Services
+  const errorAnalysisService = new AIErrorAnalysisService(aiProvider);
+  const recommendationService = new AIRecommendationService(aiProvider);
+  const explanationService = new AIExplanationService(aiProvider);
+
+  // Initialize middleware
+  const authMiddleware = new AuthMiddleware(tokenService, userRepository);
+  const ownershipGuard = new OwnershipGuard(studentRepository);
+
+  // Initialize controllers
+  const authController = new AuthController(authService);
+  const studentController = new StudentController(studentService);
+  const aiController = new AIController(
+    errorAnalysisService,
+    recommendationService,
+    explanationService
+  );
+  const assessmentController = new AssessmentController(assessmentService);
+  const analyticsController = new AnalyticsController(
+    analyticsProgressService,
+    analyticsService
+  );
+
+  // Apply rate limiters
+  const defaultLimiter = RateLimiter.getDefaultLimiter();
+  const authLimiter = RateLimiter.getAuthLimiter();
+  const aiLimiter = RateLimiter.getAILimiter();
+
+  // API routes with rate limiting
+  app.use('/api/v1/auth', authLimiter, createAuthRoutes(authController));
+  app.use('/api/v1', defaultLimiter, createStudentRoutes(studentController, authMiddleware, ownershipGuard));
+  app.use('/api/v1/ai', aiLimiter, createAIRoutes(aiController, authMiddleware));
+  app.use('/api/v1', defaultLimiter, createAssessmentRoutes(assessmentController, authMiddleware, ownershipGuard));
+  app.use('/api/v1', defaultLimiter, createAnalyticsRoutes(analyticsController, authMiddleware, ownershipGuard));
+  app.use('/api/v1', defaultLimiter, createDocsRoutes());
+
+  // Error handler
+  app.use(errorHandler);
+
+  return app;
+}
+
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  const env = getEnv();
+  const port = Number(env.PORT);
+  
+  bootstrap().then((app) => {
+    const server = app.listen(port, () => {
+      logger.info(`🚀 MENTORA Backend running on port ${port} in ${env.NODE_ENV} mode`);
+    });
+
+    // Graceful shutdown
+    const shutdown = async () => {
+      logger.info('Shutting down gracefully...');
+      await prisma.$disconnect();
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+  }).catch(async (error) => {
+    logger.error({ error }, 'Failed to start application');
+    await prisma.$disconnect();
+    process.exit(1);
+  });
+}
+
+export default bootstrap;
