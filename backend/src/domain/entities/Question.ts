@@ -1,10 +1,33 @@
 import { DomainError } from '../errors/DomainError.js';
 import { randomUUID } from 'crypto';
 
+// Canonical Question.type vocabulary.
+// The database is the source of truth and uses UPPER_SNAKE_CASE values
+// (see Prisma `model Question`, `type String @default("MULTIPLE_CHOICE")`).
+// The domain entity previously used lower_snake_case, which had no conversion layer
+// and therefore never matched what was actually stored. Aligned to the DB vocabulary.
+export type QuestionType = 'MULTIPLE_CHOICE' | 'OPEN_ENDED' | 'CALCULATION' | 'CONCEPTUAL';
+
+// Legacy API contract values (lower_snake_case) mapped to the canonical vocabulary.
+// Kept so any existing API payload shape continues to resolve correctly.
+const LEGACY_TYPE_MAP: Record<string, QuestionType> = {
+  multiple_choice: 'MULTIPLE_CHOICE',
+  open_ended: 'OPEN_ENDED',
+  calculation: 'CALCULATION',
+  conceptual: 'CONCEPTUAL',
+};
+
+export function normalizeQuestionType(value: string): QuestionType {
+  if (LEGACY_TYPE_MAP[value]) {
+    return LEGACY_TYPE_MAP[value];
+  }
+  return value as QuestionType;
+}
+
 export interface QuestionProps {
   id?: string;
   content: string;
-  type: 'multiple_choice' | 'open_ended' | 'calculation' | 'conceptual';
+  type: string;
   difficulty: number;
   skillId: string;
   options?: string[];
@@ -18,7 +41,7 @@ export interface QuestionProps {
 export class Question {
   public readonly id: string;
   public readonly content: string;
-  public readonly type: 'multiple_choice' | 'open_ended' | 'calculation' | 'conceptual';
+  public readonly type: QuestionType;
   public readonly difficulty: number;
   public readonly skillId: string;
   public readonly options?: string[];
@@ -31,7 +54,7 @@ export class Question {
   private constructor(props: QuestionProps) {
     this.id = props.id || randomUUID();
     this.content = props.content;
-    this.type = props.type;
+    this.type = normalizeQuestionType(props.type);
     this.difficulty = props.difficulty;
     this.skillId = props.skillId;
     this.options = props.options;
@@ -52,7 +75,7 @@ export class Question {
     if (props.difficulty < 1 || props.difficulty > 10) {
       throw new DomainError('Difficulty must be between 1 and 10');
     }
-    if (props.type === 'multiple_choice' && (!props.options || props.options.length < 2)) {
+    if (normalizeQuestionType(props.type) === 'MULTIPLE_CHOICE' && (!props.options || props.options.length < 2)) {
       throw new DomainError('Multiple choice questions must have at least 2 options');
     }
     if (!props.correctAnswer) {

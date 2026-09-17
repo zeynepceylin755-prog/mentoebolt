@@ -1,0 +1,14 @@
+{
+  "statistics": {
+    "totalProcessComponents": 60,
+    "totalMicroSkills": 70,
+    "minMicroSkills": 1,
+    "maxMicroSkills": 4,
+    "avgMicroSkills": 1.1666666666666667,
+    "emptyProcessComponents": 0,
+    "duplicateCodes": [],
+    "mebTextChanges": 0
+  },
+  "source": "MENTORA_MANUAL",
+  "reviewed": true
+}

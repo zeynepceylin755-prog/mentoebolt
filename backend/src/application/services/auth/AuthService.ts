@@ -94,7 +94,9 @@ export class AuthService {
 
     const savedStudent = await this.studentRepository.save(student);
 
-    logger.info({ userId: savedUser.id, email: savedUser.email }, 'User registered');
+    // Phase 6.7 (privacy): log the internal userId only — the email is PII and
+    // has no diagnostic value that the userId does not already provide.
+    logger.info({ userId: savedUser.id }, 'User registered');
 
     const tokens = await this.generateTokens(savedUser);
 
@@ -137,7 +139,8 @@ export class AuthService {
     });
     await this.sessionRepository.save(session);
 
-    logger.info({ userId: user.id, email: user.email, sessionId: session.id }, 'User logged in');
+    // Phase 6.7 (privacy): userId + sessionId only; never the email (PII).
+    logger.info({ userId: user.id, sessionId: session.id }, 'User logged in');
 
     const tokens = await this.generateTokens(user);
 
@@ -147,10 +150,20 @@ export class AuthService {
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const payload = this.tokenService.verifyRefreshToken(refreshToken);
-      
+
       const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
-      if (!storedToken || !storedToken.isActive()) {
-        throw new AuthenticationError('Invalid or expired refresh token');
+      if (!storedToken) {
+        throw new AuthenticationError('Invalid refresh token');
+      }
+
+      if (!storedToken.isActive()) {
+        if (storedToken.isExpired()) {
+          throw new AuthenticationError('Refresh token has expired');
+        }
+        if (storedToken.isRevoked()) {
+          throw new AuthenticationError('Refresh token has been revoked');
+        }
+        throw new AuthenticationError('Invalid refresh token');
       }
 
       const user = await this.userRepository.findById(payload.userId);
@@ -158,8 +171,21 @@ export class AuthService {
         throw new AuthenticationError('User not found');
       }
 
+      // Check if user is soft-deleted (if the field exists in the user object)
+      if ('deletedAt' in user && user.deletedAt) {
+        throw new AuthenticationError('User account has been deleted');
+      }
+
+      // Check if user is locked
+      if (user.lockedUntil && user.lockedUntil > new Date()) {
+        throw new AuthenticationError('Account is temporarily locked');
+      }
+
+      // Revoke old token and generate new ones (token rotation)
       await this.refreshTokenRepository.revoke(storedToken.id);
       const tokens = await this.generateTokens(user);
+
+      logger.info({ userId: user.id }, 'Token refreshed successfully');
       return tokens;
     } catch (error) {
       logger.warn({ error }, 'Refresh token verification failed');
@@ -168,9 +194,13 @@ export class AuthService {
   }
 
   async logout(userId: string, refreshToken?: string): Promise<void> {
+    // Revoke all refresh tokens for the user
     await this.refreshTokenRepository.revokeAllForUser(userId);
+
+    // Delete all sessions for the user
     await this.sessionRepository.deleteAllForUser(userId);
-    logger.info({ userId }, 'User logged out');
+
+    logger.info({ userId, hasRefreshToken: !!refreshToken }, 'User logged out');
   }
 
   private async generateTokens(user: User): Promise<TokenPair> {
@@ -181,10 +211,10 @@ export class AuthService {
     };
 
     const accessToken = this.tokenService.generateAccessToken(payload);
-    
+
     const refreshTokenId = randomUUID();
     const refreshTokenString = this.tokenService.generateRefreshToken(user.id, refreshTokenId);
-    
+
     const refreshToken = RefreshToken.create({
       userId: user.id,
       token: refreshTokenString,
@@ -201,7 +231,8 @@ export class AuthService {
 
     if (attempts >= this.maxLoginAttempts) {
       lockedUntil = new Date(Date.now() + this.lockDurationMinutes * 60 * 1000);
-      logger.warn({ userId: user.id, email: user.email }, 'Account locked due to too many failed login attempts');
+      // Phase 6.7 (privacy): userId only; the email is PII.
+      logger.warn({ userId: user.id }, 'Account locked due to too many failed login attempts');
     }
 
     await this.userRepository.update(user.id, {

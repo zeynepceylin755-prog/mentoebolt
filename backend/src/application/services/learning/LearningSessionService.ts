@@ -1,11 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { IStudentRepository } from '../../../domain/interfaces/IStudentRepository.js';
+import { AuthenticationError, AuthorizationError } from '../../../domain/errors/AuthenticationError.js';
 import { logger } from '../../../infrastructure/logging/logger.js';
 
 export interface StartSessionDTO {
   studentId: string;
   sessionType?: 'PRACTICE' | 'ASSESSMENT' | 'DIAGNOSTIC' | 'REVIEW';
   title?: string;
+  expiresAt?: Date;
 }
 
 export interface AddQuestionDTO {
@@ -15,6 +17,9 @@ export interface AddQuestionDTO {
 }
 
 export class LearningSessionService {
+  // Default session expiration: 2 hours
+  private readonly DEFAULT_SESSION_EXPIRATION_HOURS = 2;
+
   constructor(
     private readonly prisma: PrismaClient,
     private readonly studentRepository: IStudentRepository
@@ -23,8 +28,11 @@ export class LearningSessionService {
   async startSession(dto: StartSessionDTO): Promise<any> {
     const student = await this.studentRepository.findById(dto.studentId);
     if (!student) {
-      throw new Error('Student not found');
+      throw new AuthenticationError('Student not found');
     }
+
+    // Calculate expiration if not provided
+    const expiresAt = dto.expiresAt || new Date(Date.now() + this.DEFAULT_SESSION_EXPIRATION_HOURS * 60 * 60 * 1000);
 
     const session = await this.prisma.learningSession.create({
       data: {
@@ -34,10 +42,11 @@ export class LearningSessionService {
         startedAt: new Date(),
         totalQuestions: 0,
         correctAnswers: 0,
+        expiresAt,
       },
     });
 
-    logger.info({ sessionId: session.id, studentId: dto.studentId }, 'Learning session started');
+    logger.info({ sessionId: session.id, studentId: dto.studentId, expiresAt }, 'Learning session started');
     return session;
   }
 
@@ -48,16 +57,22 @@ export class LearningSessionService {
     });
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new AuthorizationError('Session not found');
     }
 
+    // Validate session status
     if (session.status !== 'ACTIVE') {
-      throw new Error('Session is not active');
+      throw new AuthorizationError('Session is not active');
+    }
+
+    // Validate session expiration
+    if (session.expiresAt && new Date() > session.expiresAt) {
+      throw new AuthorizationError('Session has expired');
     }
 
     const existing = session.questions.find(q => q.questionId === dto.questionId);
     if (existing) {
-      throw new Error('Question already in session');
+      throw new AuthorizationError('Question already in session');
     }
 
     const sessionQuestion = await this.prisma.learningSessionQuestion.create({
@@ -77,8 +92,8 @@ export class LearningSessionService {
     return sessionQuestion;
   }
 
-  async getSession(sessionId: string): Promise<any> {
-    return this.prisma.learningSession.findUnique({
+  async getSession(sessionId: string, userId?: string): Promise<any> {
+    const session = await this.prisma.learningSession.findUnique({
       where: { id: sessionId },
       include: {
         questions: {
@@ -93,29 +108,71 @@ export class LearningSessionService {
         attempts: true,
       },
     });
+
+    if (!session) {
+      throw new AuthorizationError('Session not found');
+    }
+
+    // If userId is provided, validate ownership
+    if (userId) {
+      const student = await this.studentRepository.findByUserId(userId);
+      if (!student || session.studentId !== student.id) {
+        throw new AuthorizationError('You do not have access to this session');
+      }
+    }
+
+    return session;
   }
 
   async getActiveSession(studentId: string): Promise<any> {
-    return this.prisma.learningSession.findFirst({
+    const session = await this.prisma.learningSession.findFirst({
       where: {
         studentId,
         status: 'ACTIVE',
       },
       orderBy: { startedAt: 'desc' },
     });
+
+    // Check if session is expired
+    if (session && session.expiresAt && new Date() > session.expiresAt) {
+      // Auto-expire the session
+      await this.prisma.learningSession.update({
+        where: { id: session.id },
+        data: {
+          status: 'EXPIRED',
+          endedAt: new Date(),
+        },
+      });
+      return null;
+    }
+
+    return session;
   }
 
-  async completeSession(sessionId: string): Promise<any> {
+  async completeSession(sessionId: string, userId?: string): Promise<any> {
     const session = await this.prisma.learningSession.findUnique({
       where: { id: sessionId },
     });
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new AuthorizationError('Session not found');
+    }
+
+    // Validate ownership if userId provided
+    if (userId) {
+      const student = await this.studentRepository.findByUserId(userId);
+      if (!student || session.studentId !== student.id) {
+        throw new AuthorizationError('You do not have access to this session');
+      }
     }
 
     if (session.status !== 'ACTIVE') {
-      throw new Error('Session is not active');
+      throw new AuthorizationError('Session is not active');
+    }
+
+    // Validate expiration
+    if (session.expiresAt && new Date() > session.expiresAt) {
+      throw new AuthorizationError('Session has expired');
     }
 
     const durationSeconds = Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);
@@ -130,17 +187,25 @@ export class LearningSessionService {
     });
   }
 
-  async abandonSession(sessionId: string): Promise<any> {
+  async abandonSession(sessionId: string, userId?: string): Promise<any> {
     const session = await this.prisma.learningSession.findUnique({
       where: { id: sessionId },
     });
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new AuthorizationError('Session not found');
+    }
+
+    // Validate ownership if userId provided
+    if (userId) {
+      const student = await this.studentRepository.findByUserId(userId);
+      if (!student || session.studentId !== student.id) {
+        throw new AuthorizationError('You do not have access to this session');
+      }
     }
 
     if (session.status !== 'ACTIVE') {
-      throw new Error('Session is not active');
+      throw new AuthorizationError('Session is not active');
     }
 
     const durationSeconds = Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);
@@ -153,5 +218,35 @@ export class LearningSessionService {
         durationSeconds,
       },
     });
+  }
+
+  /**
+   * Validates a learning session for mutations
+   * Checks existence, ownership, status, and expiration
+   */
+  async validateSessionForMutation(sessionId: string, userId: string): Promise<void> {
+    const session = await this.prisma.learningSession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new AuthorizationError('Learning session not found');
+    }
+
+    // Validate ownership
+    const student = await this.studentRepository.findByUserId(userId);
+    if (!student || session.studentId !== student.id) {
+      throw new AuthorizationError('You do not have access to this learning session');
+    }
+
+    // Validate status
+    if (session.status !== 'ACTIVE') {
+      throw new AuthorizationError(`Cannot modify session with status: ${session.status}`);
+    }
+
+    // Validate expiration
+    if (session.expiresAt && new Date() > session.expiresAt) {
+      throw new AuthorizationError('Learning session has expired');
+    }
   }
 }

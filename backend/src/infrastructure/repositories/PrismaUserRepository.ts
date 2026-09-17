@@ -85,6 +85,13 @@ export class PrismaUserRepository implements IUserRepository {
       lastName: prismaUser.lastName,
       role: prismaUser.role as 'STUDENT' | 'TEACHER' | 'ADMIN' | 'CONTENT_MANAGER',
       emailVerified: prismaUser.emailVerified,
+      // Phase 7.3: carry the lockout state onto the entity. Without this, the
+      // account-lockout control (login + middleware) read `undefined` and never
+      // fired — a real security gap. deletedAt is enforced in the WHERE clause of
+      // findById/findByEmail, but is also mapped here for completeness.
+      loginAttempts: prismaUser.loginAttempts,
+      lockedUntil: prismaUser.lockedUntil ?? undefined,
+      deletedAt: prismaUser.deletedAt ?? undefined,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     });

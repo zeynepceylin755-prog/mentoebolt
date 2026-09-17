@@ -12,6 +12,8 @@ export function createAnalyticsRoutes(
 
   router.use(authMiddleware.authenticate);
 
+  // `/me/*` routes resolve the caller's StudentProfile from the authenticated
+  // user; they never accept a studentId from the request.
   router.get(
     '/analytics/me/progress',
     analyticsController.getMyProgress
@@ -19,27 +21,27 @@ export function createAnalyticsRoutes(
 
   router.get(
     '/analytics/me/skills',
-    analyticsController.getAllSkillProgress
+    analyticsController.getMySkillProgress
   );
 
   router.get(
     '/analytics/me/weekly',
-    analyticsController.getWeeklyProgress
+    analyticsController.getMyWeeklyProgress
   );
 
   router.get(
     '/analytics/me/monthly',
-    analyticsController.getMonthlyProgress
+    analyticsController.getMyMonthlyProgress
   );
 
   router.get(
     '/analytics/me/trends',
-    analyticsController.getLearningTrends
+    analyticsController.getMyLearningTrends
   );
 
   router.get(
     '/analytics/me/analytics',
-    analyticsController.getStudentAnalytics
+    analyticsController.getMyAnalytics
   );
 
   router.get(

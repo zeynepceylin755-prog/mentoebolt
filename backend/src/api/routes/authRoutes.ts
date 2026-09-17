@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController.js';
+import { AuthMiddleware } from '../middleware/auth.js';
 import { validate } from '../middleware/validation.js';
 import { z } from 'zod';
 
@@ -21,16 +22,19 @@ const refreshSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
-export function createAuthRoutes(authController: AuthController): Router {
+export function createAuthRoutes(
+  authController: AuthController,
+  authMiddleware: AuthMiddleware
+): Router {
   const router = Router();
 
   // Public routes - no authentication required
   router.post('/register', validate(registerSchema), authController.register);
   router.post('/login', validate(loginSchema), authController.login);
   router.post('/refresh', validate(refreshSchema), authController.refresh);
-  
+
   // Protected route - requires authentication
-  router.post('/logout', authController.logout);
+  router.post('/logout', authMiddleware.authenticate, authController.logout);
 
   return router;
 }

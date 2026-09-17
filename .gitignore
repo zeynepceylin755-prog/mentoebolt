@@ -35,6 +35,15 @@ backend/.env.*
 # Runtime/generated artifacts
 backend/node
 backend/*.log
+# Phase 5F.8 (C) — local development upload storage
+backend/uploads/
+uploads/
+
+# Frontend (Phase 5F.8 B)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+!frontend/.env.example
 
 # Test artifacts
 backend/test-results/
@@ -48,3 +57,21 @@ backend/config/*.js
 backend/config/*.js.map
 backend/config/*.d.ts
 backend/config/*.d.ts.map
+# Stray in-place TypeScript output.
+#
+# `tsc` run without --outDir (or with the wrong one) drops .js/.d.ts files next
+# to their .ts sources. Vite and Node then prefer the stale .js, which still
+# contains TypeScript-only syntax and crashes the test run with a parse error.
+# Build output belongs in backend/dist, never in backend/src.
+backend/src/**/*.js
+backend/src/**/*.js.map
+backend/src/**/*.d.ts
+backend/src/**/*.d.ts.map
+# Curriculum/source PDFs
+*.pdf
+# Curriculum/source PDFs
+*.pdf
+
+# SQLite runtime/test databases
+backend/prisma/prisma/*.db
+backend/prisma/prisma/*.db-journal

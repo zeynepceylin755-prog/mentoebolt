@@ -1,0 +1,339 @@
+{
+  "source": {
+    "name": "MEB Türkiye Yüzyılı Maarif Modeli",
+    "grade": 11,
+    "subject": "Matematik",
+    "sourceFiles": [
+      "mentora_11_sinif_matematik_meb.txt",
+      "mentora_11_sinif_matematik_meb_theme3_full.txt"
+    ],
+    "updateDate": "07.08.2026",
+    "extractionNote": "COMPLETE EXTRACTION - All 3 themes extracted from official MEB PDF sources. Theme 1 and 2 from provided TXT, Theme 3 from PDF extraction."
+  },
+  "completeness": {
+    "status": "COMPLETE",
+    "themesInSource": 3,
+    "themesExpected": 3,
+    "missingThemes": [],
+    "missingLearningOutcomes": [],
+    "reason": "COMPLETE"
+  },
+  "themes": [
+    {
+      "code": "1",
+      "name": "İstatistiksel Araştırma Süreci",
+      "lessonHours": 24,
+      "learningOutcomes": [
+        {
+          "code": "MAT.11.1.1",
+          "officialText": "İki nicel değişkenli veri ile çalışabilme ve iki nicel değişken arasındaki ilişkililiğe dayalı karar verebilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "İki nicel değişkenli veriye dayalı istatistiksel araştırma gerektiren gerçek yaşam durumlarını belirler."
+            },
+            {
+              "code": "b",
+              "officialText": "Bağlam içerisinde iki nicel değişken arasındaki ilişkililiğe odaklanan araştırma soruları oluşturur."
+            },
+            {
+              "code": "c",
+              "officialText": "İki nicel değişkenli veri toplamak/elde etmek için plan yapar."
+            },
+            {
+              "code": "ç",
+              "officialText": "İki nicel değişkenli verileri toplayarak/elde ederek analize hazırlar."
+            },
+            {
+              "code": "d",
+              "officialText": "Araştırma sorusu bağlamında toplanan/elde edilen iki nicel değişkenli verileri analiz etmek için görselleştirme ve/veya özetleme [tablo, serpme diyagramı (saçılım grafiği), bölgelere göre sayım oranı, korelasyon katsayısı] araçlarından uygun olanı seçer."
+            },
+            {
+              "code": "e",
+              "officialText": "Araştırma sorusu bağlamında toplanan/elde edilen verileri belirlediği araçlarla analiz eder."
+            },
+            {
+              "code": "f",
+              "officialText": "İki nicel değişkenli veri dağılımlarına dayalı istatistiksel araştırmadan elde edilen bulguları yorumlayarak sonuç çıkarır."
+            },
+            {
+              "code": "g",
+              "officialText": "İki nicel değişkenli veri dağılımlarına dayalı istatistiksel araştırmadan elde edilen sonuçları araştırma sorusu bağlamında değerlendirir."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.1.2",
+          "officialText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğine dayalı istatistiksel sonuç veya yorumları tartışabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğine dayalı istatistiksel sonuç veya yorumlara yönelik istatistiksel temellendirme yapar."
+            },
+            {
+              "code": "b",
+              "officialText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğine dayalı istatistiksel sonuç veya yorumlara yönelik hataları ya da yanlılıkları tespit eder."
+            },
+            {
+              "code": "c",
+              "officialText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğine dayalı istatistiksel sonuç veya yorumları çürütür ya da kabul eder."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "2",
+      "name": "Geometrik Şekiller",
+      "lessonHours": 62,
+      "learningOutcomes": [
+        {
+          "code": "MAT.11.2.1",
+          "officialText": "Üçgenlerde açı, benzerlik ve alan özelliklerinden yola çıkarak dörtgenlerin açı, kenar, köşegen, simetri ve alan özelliklerine ilişkin muhakeme yapabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin varsayımlarda bulunur."
+            },
+            {
+              "code": "b",
+              "officialText": "Varsayımlarını kullanarak dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin örüntüleri geneller."
+            },
+            {
+              "code": "c",
+              "officialText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin varsayımları ile genellemelerini karşılaştırır."
+            },
+            {
+              "code": "ç",
+              "officialText": "Elde ettiği genellemeleri kullanarak dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin önermeler sunar."
+            },
+            {
+              "code": "d",
+              "officialText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin sunduğu önermeleri yeni durumlara uyarlayarak değerlendirir."
+            },
+            {
+              "code": "e",
+              "officialText": "Elde ettiği önermeleri üçgenlerde açı, benzerlik ve alan özelliklerini kullanarak ispatlar."
+            },
+            {
+              "code": "f",
+              "officialText": "Uyguladığı ispatı kullanışlılık açısından değerlendirir."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.2.2",
+          "officialText": "Özel dörtgenlerin kenar, açı, köşegen ve simetri özelliklerinden hareketle aralarındaki ilişkileri yapılandırabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Dörtgenlerin özelliklerini kullanarak özel dörtgenler arasında hiyerarşik veya nedensel ilişkiler ortaya koyar."
+            },
+            {
+              "code": "b",
+              "officialText": "Özel dörtgenler arasındaki hiyerarşik ilişkilere dair anlamlı bir bütün oluşturur."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.2.3",
+          "officialText": "Çokgenleri içbükey veya dışbükey olarak sınıflandırabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Çokgenleri ayırt etmek için ölçütler belirler."
+            },
+            {
+              "code": "b",
+              "officialText": "Çokgenleri belirlediği ölçütlere göre ayrıştırır."
+            },
+            {
+              "code": "c",
+              "officialText": "Ayrıştırdığı çokgenleri tasnif eder."
+            },
+            {
+              "code": "ç",
+              "officialText": "Çokgenleri belirlediği ölçüte uygun olarak etiketler/belirler."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.2.4",
+          "officialText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine dair çıkarım yapabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine dair varsayımlarda bulunur."
+            },
+            {
+              "code": "b",
+              "officialText": "Varsayımlarını kullanarak dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin örüntüleri geneller."
+            },
+            {
+              "code": "c",
+              "officialText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin genellemelerini varsayımları ile karşılaştırır."
+            },
+            {
+              "code": "ç",
+              "officialText": "Elde ettiği genellemeleri kullanarak dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin önermeler sunar."
+            },
+            {
+              "code": "d",
+              "officialText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin sunduğu önermeleri problem durumlarına uyarlayarak kullanışlılık açısından değerlendirir."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.2.5",
+          "officialText": "Çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerini içeren problemler çözebilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Çokgenleri içeren problemlerin parçalarını (nicelik, şekil gibi) belirler."
+            },
+            {
+              "code": "b",
+              "officialText": "Problemin parçaları arasındaki ilişkileri belirler."
+            },
+            {
+              "code": "c",
+              "officialText": "Problemin bileşenlerini ve aralarındaki ilişkileri bağlama uygun olarak matematiksel temsillere dönüştürür."
+            },
+            {
+              "code": "ç",
+              "officialText": "Matematiksel temsillere dönüştürdüğü problemin öncüllerini ve ulaşmak istediği sonucu kendi ifadeleri ile açıklar."
+            },
+            {
+              "code": "d",
+              "officialText": "Problemin çözümü için stratejiler geliştirir."
+            },
+            {
+              "code": "e",
+              "officialText": "Geliştirdiği stratejileri kullanarak problemi çözer."
+            },
+            {
+              "code": "f",
+              "officialText": "Çözümünü kontrol eder ve çözüme ulaştırmayan stratejiyi değiştirir."
+            },
+            {
+              "code": "g",
+              "officialText": "Problemin olası farklı çözüm stratejilerini inceleyerek problemin çözümüne ilişkin deneyimini gözden geçirir."
+            },
+            {
+              "code": "ğ",
+              "officialText": "Deneyimine dayalı olarak çözüme ulaştıran stratejilerin hangi problemlere uyarlanabileceğine ilişkin çıkarım yapar."
+            },
+            {
+              "code": "h",
+              "officialText": "Ulaştığı çıkarımların geçerliliğini değerlendirir."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "3",
+      "name": "Nitelikler ve Değişimler (1)",
+      "lessonHours": 42,
+      "sourceFile": "mentora_11_sinif_matematik_meb_theme3_full.txt",
+      "learningOutcomes": [
+        {
+          "code": "MAT.11.3.1",
+          "officialText": "f(x)=sinx (x∈∈∈∈ℝ), f(x)=cosx (x∈∈∈∈ℝ), f(x)=tanx(x∈∈∈∈ℝ, x≠π/2+kπ, k∈∈∈∈ℤ ) ve f(x)=cotx (x∈∈∈∈ℝ, x≠kπ, k∈∈∈∈ℤ)şeklinde tanımlı trigonometrik referans fonksiyonlarınnitel özellikleri ile bu fonksiyonlardan türetilen [g(x) =k·f(mx±r)±s (k, m, r, s ∈∈∈∈ ℝ, k≠0, m≠0)] trigonometrikfonksiyonların nitel özelliklerine ilişkin matematikselmuhakeme yapabilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Trigonometrik referans fonksiyonların nitel özelliklerini(tanım kümesi, görüntü kümesi, işareti, artanlığı-azalanlığı,maksimum-minimum noktaları, sıfırları, bire birliği,tekliği-çiftliği, örtenliği, periyodu) matematiksel temsilleri kullanarak belirler."
+            },
+            {
+              "code": "b",
+              "officialText": "Trigonometrik referans fonksiyonların nitel özellikleri ilematematiksel temsilleri arasındaki ilişkileri belirler."
+            },
+            {
+              "code": "c",
+              "officialText": "Trigonometrik referans fonksiyonları graﬁk ve cebirseltemsili üzerinde yapılan işlemlerle diğer trigonometrikfonksiyonlara dönüştürür."
+            },
+            {
+              "code": "ç",
+              "officialText": "Trigonometrik referans fonksiyonlar ile bufonksiyonlardan türetilen fonksiyonların graﬁk temsilleri ilecebirsel temsilleri arasındaki ilişkiyi ifade eder."
+            },
+            {
+              "code": "d",
+              "officialText": "Trigonometrik referans fonksiyonlardan türetilenfonksiyonların nitel özelliklerine ilişkin varsayımlardabulunur."
+            },
+            {
+              "code": "e",
+              "officialText": "Varsayımlarından yararlanıp farklı durumlarla ilgiliörüntüleri listeleyerek türetilen fonksiyonların nitelözellikleriyle ilgili örüntüleri geneller."
+            },
+            {
+              "code": "f",
+              "officialText": "Genellemelerinin varsayımlarını karşılayıp karşılamadığınıkontrol eder."
+            },
+            {
+              "code": "g",
+              "officialText": "Genellemelerinden elde ettiği önermeleri uygun sözelveya cebirsel dil ile sunar."
+            },
+            {
+              "code": "ğ",
+              "officialText": "Elde ettiği önermelerin gerçek yaşam bağlamlarındakikullanışlılığını değerlendirir."
+            },
+            {
+              "code": "h",
+              "officialText": "Önermelerini graﬁksel olarak doğrular veya cebirselolarak ispatlar."
+            },
+            {
+              "code": "ı",
+              "officialText": "Uyguladığı doğrulama veya ispat yöntemlerinin farklıdurumlardaki kullanışlılığını değerlendirir."
+            }
+          ]
+        },
+        {
+          "code": "MAT.11.3.2",
+          "officialText": "Trigonometrik fonksiyonlarla ifadeedilebilen denklemleri içeren problemleri çözebilme",
+          "processComponents": [
+            {
+              "code": "a",
+              "officialText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlere ilişkin matematiksel bileşenleri (denklemioluşturan fonksiyonların nitel özellikleri ile cebirsel ve graﬁktemsilleri) belirler."
+            },
+            {
+              "code": "b",
+              "officialText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlere ilişkin matematiksel bileşenlerin aralarındakiilişkileri belirler."
+            },
+            {
+              "code": "c",
+              "officialText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlerin problem bağlamındaki temsillerini farklıtemsillere dönüştürür."
+            },
+            {
+              "code": "ç",
+              "officialText": "Dönüştürdüğü temsillerin problem bağlamındaki anlamını ifade eder."
+            },
+            {
+              "code": "d",
+              "officialText": "Elde ettiği ve yorumladığı farklı temsillere dayalı olarakproblemin çözümü için strateji oluşturur."
+            },
+            {
+              "code": "e",
+              "officialText": "Belirlediği stratejiyi kullanır."
+            },
+            {
+              "code": "f",
+              "officialText": "Elde ettiği çözümü farklı yöntemleri kullanarak doğrular."
+            },
+            {
+              "code": "g",
+              "officialText": "Problemin olası çözüm stratejilerini gözden geçirir."
+            },
+            {
+              "code": "ğ",
+              "officialText": "Problemin olası çözüm stratejilerinin trigonometrikfonksiyon içeren farklı problem durumlarında kullanımı ileilgili çıkarımlar yapar."
+            },
+            {
+              "code": "h",
+              "officialText": "Çıkarımlarının geçerliliğini sözel, cebirsel ve graﬁkselargümanlarla değerlendirir."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

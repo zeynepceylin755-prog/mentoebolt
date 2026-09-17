@@ -15,7 +15,10 @@
     "check:env": "./scripts/check-env.sh",
     "health": "./scripts/health-check.sh",
     "backup": "./scripts/backup.sh",
-    "migrate": "./scripts/migrate.sh"
+    "migrate": "./scripts/migrate.sh",
+    "seed:curriculum": "tsx prisma/seed-curriculum.ts",
+    "seed:microskill": "tsx prisma/seed-microskill.ts",
+    "seed:error-pattern": "tsx prisma/seed-error-pattern.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

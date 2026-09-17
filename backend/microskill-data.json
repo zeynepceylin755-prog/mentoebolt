@@ -1,0 +1,641 @@
+{
+  "microSkills": [
+    {
+      "processComponentCode": "MAT.11.1.1-a",
+      "processComponentText": "İki nicel değişkenli veriye dayalı istatistiksel araştırma gerektiren gerçek yaşam durumlarını belirler.",
+      "code": "MS-MAT.11.1.1-a-01",
+      "name": "Gerçek yaşam durumunda iki nicel değişkenli veri ilişkisini belirleme",
+      "description": "Verilen gerçek yaşam durumunda hangi iki nicel değişkenin ilişkili olduğunu ve bu ilişkinin istatistiksel araştırma gerektirip gerektirmediğini belirleyebilme",
+      "category": "PROBLEM_SOLVING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-a",
+      "processComponentText": "İki nicel değişkenli veriye dayalı istatistiksel araştırma gerektiren gerçek yaşam durumlarını belirler.",
+      "code": "MS-MAT.11.1.1-a-02",
+      "name": "İstatistiksel araştırma gerektiren senaryo ayrımı",
+      "description": "Verilen senaryolar arasında istatistiksel araştırma gerektiren ve gerektirmeyen durumları ayırt edebilme",
+      "category": "INTERPRETATION",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-b",
+      "processComponentText": "Bağlam içerisinde iki nicel değişken arasındaki ilişkililiğe odaklanan araştırma soruları oluşturur.",
+      "code": "MS-MAT.11.1.1-b-01",
+      "name": "İki nicel değişkenli araştırma sorusu formülasyonu",
+      "description": "Verilen bağlamda iki nicel değişken arasındaki ilişkiyi araştırmak için uygun araştırma sorusu formül edebilme",
+      "category": "PROBLEM_SOLVING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-b",
+      "processComponentText": "Bağlam içerisinde iki nicel değişken arasındaki ilişkililiğe odaklanan araştırma soruları oluşturur.",
+      "code": "MS-MAT.11.1.1-b-02",
+      "name": "Araştırma sorusu spesifikasyonu",
+      "description": "Araştırma sorusunun spesifik olarak hangi değişkenleri araştırdığını ve hangi ilişkiyi sorguladığını tanımlayabilme",
+      "category": "REASONING",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-c",
+      "processComponentText": "İki nicel değişkenli veri toplamak/elde etmek için plan yapar.",
+      "code": "MS-MAT.11.1.1-c-01",
+      "name": "Veri toplama planı oluşturma",
+      "description": "İki nicel değişkenli veri toplamak için uygun veri toplama yöntemini ve planını belirleyebilme",
+      "category": "PROCEDURE",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-c",
+      "processComponentText": "İki nicel değişkenli veri toplamak/elde etmek için plan yapar.",
+      "code": "MS-MAT.11.1.1-c-02",
+      "name": "Veri toplama yöntemi seçimi",
+      "description": "Araştırma sorusuna uygun veri toplama yöntemini (anket, gözlem, ölçüm vb.) seçebilme",
+      "category": "REASONING",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-d",
+      "processComponentText": "Araştırma sorusu bağlamında toplanan/elde edilen iki nicel değişkenli verileri analiz etmek için görselleştirme ve/veya özetleme [tablo, serpme diyagramı (saçılım grafiği), bölgelere göre sayım oranı, korelasyon katsayısı] araçlarından uygun olanı seçer.",
+      "code": "MS-MAT.11.1.1-d-01",
+      "name": "Serpme diyagramı seçimi ve yorumu",
+      "description": "İki nicel değişkenli veri ilişkisini analiz etmek için serpme diyagramının uygunluğunu değerlendirebilme ve grafikten çıkarım yapabilme",
+      "category": "REPRESENTATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-d",
+      "processComponentText": "Araştırma sorusu bağlamında toplanan/elde edilen iki nicel değişkenli verileri analiz etmek için görselleştirme ve/veya özetleme [tablo, serpme diyagramı (saçılım grafiği), bölgelere göre sayım oranı, korelasyon katsayısı] araçlarından uygun olanı seçer.",
+      "code": "MS-MAT.11.1.1-d-02",
+      "name": "Tablo ve özet istatistik kullanımı",
+      "description": "İki nicel değişkenli verileri analiz etmek için tablo ve özet istatistik araçlarını kullanabilme",
+      "category": "REPRESENTATION",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-d",
+      "processComponentText": "Araştırma sorusu bağlamında toplanan/elde edilen iki nicel değişkenli verileri analiz etmek için görselleştirme ve/veya özetleme [tablo, serpme diyagramı (saçılım grafiği), bölgelere göre sayım oranı, korelasyon katsayısı] araçlarından uygun olanı seçer.",
+      "code": "MS-MAT.11.1.1-d-03",
+      "name": "Korelasyon katsayısı yorumu",
+      "description": "Korelasyon katsayısının değerini yorumlayarak ilişkinin yönünü ve gücünü belirleyebilme",
+      "category": "INTERPRETATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-e",
+      "processComponentText": "Araştırma sorusu bağlamında toplanan/elde edilen verileri belirlediği araçlarla analiz eder.",
+      "code": "MS-MAT.11.1.1-e-01",
+      "name": "Serpme diyagramı analizi",
+      "description": "Serpme diyagramındaki veri dağılımını analiz ederek iki değişken arasındaki ilişkiyi belirleyebilme",
+      "category": "INTERPRETATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-e",
+      "processComponentText": "Araştırma sorusu bağlamında toplanan/elde edilen verileri belirlediği araçlarla analiz eder.",
+      "code": "MS-MAT.11.1.1-e-02",
+      "name": "İstatistiksel araç sonuçları değerlendirmesi",
+      "description": "Seçilen istatistiksel araçların sonuçlarını araştırma sorusu bağlamında değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-f",
+      "processComponentText": "İki nicel değişkenli veri dağılımlarına dayalı istatistiksel araştırmadan elde edilen bulguları yorumlayarak sonuç çıkarır.",
+      "code": "MS-MAT.11.1.1-f-01",
+      "name": "İstatistiksel bulgu yorumlama",
+      "description": "İki nicel değişkenli veri analizinden elde edilen bulguları matematiksel olarak yorumlayabilme",
+      "category": "INTERPRETATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-f",
+      "processComponentText": "İki nicel değişkenli veri dağılımlarına dayalı istatistiksel araştırmadan elde edilen bulguları yorumlayarak sonuç çıkarır.",
+      "code": "MS-MAT.11.1.1-f-02",
+      "name": "Sonuç çıkarma",
+      "description": "İstatistiksel bulgulara dayalı olarak araştırma sorusuna yanıt oluşturabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-g",
+      "processComponentText": "İki nicel değişkenli veri dağılımlarına dayalı istatistiksel araştırmadan elde edilen sonuçları araştırma sorusu bağlamında değerlendirir.",
+      "code": "MS-MAT.11.1.1-g-01",
+      "name": "Sonuç değerlendirme",
+      "description": "İstatistiksel araştırma sonuçlarının araştırma sorusuna yanıt verdiğini ve sonuçların geçerliliğini değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.1-ç",
+      "processComponentText": "İki nicel değişkenli verileri toplayarak/elde ederek analize hazırlar.",
+      "code": "MS-MAT.11.1.1-ç-01",
+      "name": "Veri temizleme ve hazırlama",
+      "description": "İki nicel değişkenli veri setini analiz için temizleyip hazırlayabilme (eksik değerler, aykırı değerler vb.)",
+      "category": "PROCEDURE",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.1.2-a",
+      "processComponentText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğine dayalı istatistiksel sonuç veya yorumlara yönelik istatistiksel temellendirme yapar.",
+      "code": "MS-MAT.11.1.2-a-01",
+      "name": "İstatistiksel temellendirme",
+      "description": "Başkalarının istatistiksel sonuçlarını matematiksel prensiplerle temellendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.1.2-b",
+      "processComponentText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğe dayalı istatistiksel sonuç veya yorumlara yönelik hataları ya da yanlılıkları tespit eder.",
+      "code": "MS-MAT.11.1.2-b-01",
+      "name": "İstatistiksel hata tespiti",
+      "description": "İstatistiksel sonuçlarda veya yorumlarda hataları ve yanlılıkları tespit edebilme",
+      "category": "VERIFICATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.1.2-c",
+      "processComponentText": "Başkaları tarafından oluşturulan iki nicel değişkenli verilerin ilişkililiğe dayalı istatistiksel sonuç veya yorumları çürütür ya da kabul eder.",
+      "code": "MS-MAT.11.1.2-c-01",
+      "name": "İstatistiksel sonuç değerlendirme",
+      "description": "İstatistiksel sonuçların geçerliliğini değerlendirip kabul veya ret kararı verebilme",
+      "category": "VERIFICATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-a",
+      "processComponentText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin varsayımlarda bulunur.",
+      "code": "MS-MAT.11.2.1-a-01",
+      "name": "Dörtgen varsayımı oluşturma",
+      "description": "Dörtgenlerin kenar, açı, köşegen, simetri veya alan özellikleri hakkında matematiksel varsayım oluşturabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-b",
+      "processComponentText": "Varsayımlarını kullanarak dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin örüntüleri geneller.",
+      "code": "MS-MAT.11.2.1-b-01",
+      "name": "Dörtgen örüntü genelleme",
+      "description": "Dörtgen özellikleri hakkında oluşturulan varsayımlardan örüntüler çıkararak genellemeler yapabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-c",
+      "processComponentText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin varsayımları ile genellemelerini karşılaştırır.",
+      "code": "MS-MAT.11.2.1-c-01",
+      "name": "Varsayım-genelleme karşılaştırma",
+      "description": "Dörtgen özellikleri hakkında oluşturulan varsayımları ve genellemeleri karşılaştırıp tutarlılığını değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-d",
+      "processComponentText": "Dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin sunduğu önermeleri yeni durumlara uyarlayarak değerlendirir.",
+      "code": "MS-MAT.11.2.1-d-01",
+      "name": "Önerme uyarlama",
+      "description": "Dörtgen özellikleri hakkında oluşturulan önermeleri yeni geometrik durumlara uyarlayıp değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-e",
+      "processComponentText": "Elde ettiği önermeleri üçgenlerde açı, benzerlik ve alan özelliklerini kullanarak ispatlar.",
+      "code": "MS-MAT.11.2.1-e-01",
+      "name": "Dörtgen önerme ispatı",
+      "description": "Dörtgen özellikleri hakkında oluşturulan önermeleri üçgen özelliklerini kullanarak ispatlayabilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-f",
+      "processComponentText": "Uyguladığı ispatı kullanışlılık açısından değerlendirir.",
+      "code": "MS-MAT.11.2.1-f-01",
+      "name": "İspat değerlendirme",
+      "description": "Dörtgen özellikleri için uygulanan ispat yönteminin kullanışlılığını değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.1-ç",
+      "processComponentText": "Elde ettiği genellemeleri kullanarak dörtgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin önermeler sunar.",
+      "code": "MS-MAT.11.2.1-ç-01",
+      "name": "Önerme formülasyonu",
+      "description": "Dörtgen özellikleri hakkında elde edilen genellemelerden matematiksel önermeler formül edebilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.2-a",
+      "processComponentText": "Dörtgenlerin özelliklerini kullanarak özel dörtgenler arasında hiyerarşik veya nedensel ilişkiler ortaya koyar.",
+      "code": "MS-MAT.11.2.2-a-01",
+      "name": "Özel dörtgen hiyerarşisi",
+      "description": "Kare, dikdörtgen, paralelkenar gibi özel dörtgenler arasındaki hiyerarşik ilişkileri ortaya koyabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.2-b",
+      "processComponentText": "Özel dörtgenler arasındaki hiyerarşik ilişkilere dair anlamlı bir bütün oluşturur.",
+      "code": "MS-MAT.11.2.2-b-01",
+      "name": "Hiyerarşik sistem oluşturma",
+      "description": "Özel dörtgenler arasındaki hiyerarşik ilişkileri anlamlı bir geometrik sistem olarak organize edebilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.3-a",
+      "processComponentText": "Çokgenleri ayırt etmek için ölçütler belirler.",
+      "code": "MS-MAT.11.2.3-a-01",
+      "name": "İçbükey-dışbükey ölçütü",
+      "description": "Çokgenlerin içbükey veya dışbükey olduğunu belirlemek için matematiksel ölçütler oluşturabilme",
+      "category": "CONCEPT",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.3-b",
+      "processComponentText": "Çokgenleri belirlediği ölçütlere göre ayrıştırır.",
+      "code": "MS-MAT.11.2.3-b-01",
+      "name": "Çokgen sınıflandırma",
+      "description": "Belirlenen ölçütlere göre çokgenleri içbükey veya dışbükey olarak sınıflandırabilme",
+      "category": "PROCEDURE",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.3-c",
+      "processComponentText": "Ayrıştırdığı çokgenleri tasnif eder.",
+      "code": "MS-MAT.11.2.3-c-01",
+      "name": "Çokgen tasnif etme",
+      "description": "Sınıflandırılan çokgenleri kenar sayısı veya diğer özelliklere göre tasnif edebilme",
+      "category": "PROCEDURE",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.3-ç",
+      "processComponentText": "Çokgenleri belirlediği ölçüte uygun olarak etiketler/belirler.",
+      "code": "MS-MAT.11.2.3-ç-01",
+      "name": "Çokgen etiketleme",
+      "description": "Çokgenleri içbükey veya dışbükey olarak doğru şekilde etiketleyebilme",
+      "category": "PROCEDURE",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.4-a",
+      "processComponentText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine dair varsayımlarda bulunur.",
+      "code": "MS-MAT.11.2.4-a-01",
+      "name": "Dışbükey çokgen varsayımı",
+      "description": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri veya alan özellikleri hakkında varsayım oluşturabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.4-b",
+      "processComponentText": "Varsayımlarını kullanarak dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin örüntüleri geneller.",
+      "code": "MS-MAT.11.2.4-b-01",
+      "name": "Dışbükey çokgen örüntü genelleme",
+      "description": "Dışbükey çokgen özellikleri hakkında varsayımlardan örüntüler çıkararak genellemeler yapabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.4-c",
+      "processComponentText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin genellemelerini varsayımları ile karşılaştırır.",
+      "code": "MS-MAT.11.2.4-c-01",
+      "name": "Dışbükey çokgen karşılaştırma",
+      "description": "Dışbükey çokgen özellikleri hakkında genellemeleri varsayımlarla karşılaştırıp tutarlılığını değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.4-d",
+      "processComponentText": "Dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin sunduğu önermeleri problem durumlarına uyarlayarak kullanışlılık açısından değerlendirir.",
+      "code": "MS-MAT.11.2.4-d-01",
+      "name": "Dışbükey çokgen önerme uyarlama",
+      "description": "Dışbükey çokgen özellikleri hakkında önermeleri problem durumlarına uyarlayıp değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.2.4-ç",
+      "processComponentText": "Elde ettiği genellemeleri kullanarak dışbükey çokgenlerin kenar, açı, köşegen, simetri ve alan özelliklerine ilişkin önermeler sunar.",
+      "code": "MS-MAT.11.2.4-ç-01",
+      "name": "Dışbükey çokgen önerme formülasyonu",
+      "description": "Dışbükey çokgen özellikleri hakkında genellemelerden önermeler formül edebilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-a",
+      "processComponentText": "Çokgenleri içeren problemlerin parçalarını (nicelik, şekil gibi) belirler.",
+      "code": "MS-MAT.11.2.5-a-01",
+      "name": "Problem bileşeni belirleme",
+      "description": "Çokgen problemindeki bilinen ve bilinmeyen nicelikleri ile geometrik şekilleri belirleyebilme",
+      "category": "PROBLEM_SOLVING",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-b",
+      "processComponentText": "Problemin parçaları arasındaki ilişkileri belirler.",
+      "code": "MS-MAT.11.2.5-b-01",
+      "name": "Problem ilişki analizi",
+      "description": "Çokgen problemindeki bileşenler arasındaki matematiksel ilişkileri belirleyebilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-c",
+      "processComponentText": "Problemin bileşenlerini ve aralarındaki ilişkileri bağlama uygun olarak matematiksel temsillere dönüştürür.",
+      "code": "MS-MAT.11.2.5-c-01",
+      "name": "Matematiksel temsil oluşturma",
+      "description": "Çokgen problemini geometrik şekiller, denklemler veya cebirsel ifadelerle temsil edebilme",
+      "category": "REPRESENTATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-d",
+      "processComponentText": "Problemin çözümü için stratejiler geliştirir.",
+      "code": "MS-MAT.11.2.5-d-01",
+      "name": "Çözüm stratejisi geliştirme",
+      "description": "Çokgen problemini çözmek için uygun geometrik veya cebirsel strateji geliştirebilme",
+      "category": "PROBLEM_SOLVING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-e",
+      "processComponentText": "Geliştirdiği stratejileri kullanarak problemi çözer.",
+      "code": "MS-MAT.11.2.5-e-01",
+      "name": "Strateji uygulama",
+      "description": "Geliştirilen çözüm stratejisini uygulayarak çokgen problemini çözebilme",
+      "category": "PROCEDURE",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-f",
+      "processComponentText": "Çözümünü kontrol eder ve çözüme ulaştırmayan stratejiyi değiştirir.",
+      "code": "MS-MAT.11.2.5-f-01",
+      "name": "Çözüm kontrolü",
+      "description": "Çokgen probleminin çözümünü kontrol edip gerekirse stratejiyi değiştirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-g",
+      "processComponentText": "Problemin olası farklı çözüm stratejilerini inceleyerek problemin çözümüne ilişkin deneyimini gözden geçirir.",
+      "code": "MS-MAT.11.2.5-g-01",
+      "name": "Çoklu strateji değerlendirme",
+      "description": "Çokgen probleminin farklı çözüm stratejilerini karşılaştırarak en uygununu belirleyebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-h",
+      "processComponentText": "Ulaştığı çıkarımların geçerliliğini değerlendirir.",
+      "code": "MS-MAT.11.2.5-h-01",
+      "name": "Çıkarım geçerliliği",
+      "description": "Çokgen probleminin çözümünden elde edilen çıkarımların geçerliliğini değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-ç",
+      "processComponentText": "Matematiksel temsillere dönüştürdüğü problemin öncüllerini ve ulaşmak istediği sonucu kendi ifadeleri ile açıklar.",
+      "code": "MS-MAT.11.2.5-ç-01",
+      "name": "Problem açıklama",
+      "description": "Çokgen probleminin öncüllerini ve hedeflediği sonucu kendi ifadeleriyle açıklayabilme",
+      "category": "REASONING",
+      "difficulty": "BASIC"
+    },
+    {
+      "processComponentCode": "MAT.11.2.5-ğ",
+      "processComponentText": "Deneyimine dayalı olarak çözüme ulaştıran stratejilerin hangi problemlere uyarlanabileceğine ilişkin çıkarım yapar.",
+      "code": "MS-MAT.11.2.5-ğ-01",
+      "name": "Strateji genellemesi",
+      "description": "Çokgen probleminde kullanılan stratejilerin benzer problemlere uyarlanabilirliğini değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-a",
+      "processComponentText": "Trigonometrik referans fonksiyonların nitel özelliklerini(tanım kümesi, görüntü kümesi, işareti, artanlığı-azalanlığı,maksimum-minimum noktaları, sıfırları, bire birliği,tekliği-çiftliği, örtenliği, periyodu) matematiksel temsilleri kullanarak belirler.",
+      "code": "MS-MAT.11.3.1-a-01",
+      "name": "Tanım kümesi belirleme",
+      "description": "Trigonometrik fonksiyonların tanım kümelerini cebirsel ifadelerden belirleyebilme",
+      "category": "CONCEPT",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-a",
+      "processComponentText": "Trigonometrik referans fonksiyonların nitel özelliklerini(tanım kümesi, görüntü kümesi, işareti, artanlığı-azalanlığı,maksimum-minimum noktaları, sıfırları, bire birliği,tekliği-çiftliği, örtenliği, periyodu) matematiksel temsilleri kullanarak belirler.",
+      "code": "MS-MAT.11.3.1-a-02",
+      "name": "Görüntü kümesi belirleme",
+      "description": "Trigonometrik fonksiyonların görüntü kümelerini belirleyebilme",
+      "category": "CONCEPT",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-a",
+      "processComponentText": "Trigonometrik referans fonksiyonların nitel özelliklerini(tanım kümesi, görüntü kümesi, işareti, artanlığı-azalanlığı,maksimum-minimum noktaları, sıfırları, bire birliği,tekliği-çiftliği, örtenliği, periyodu) matematiksel temsilleri kullanarak belirler.",
+      "code": "MS-MAT.11.3.1-a-03",
+      "name": "Artanlık-azalanlık belirleme",
+      "description": "Trigonometrik fonksiyonların artan ve azalan aralıklarını belirleyebilme",
+      "category": "CONCEPT",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-a",
+      "processComponentText": "Trigonometrik referans fonksiyonların nitel özelliklerini(tanım kümesi, görüntü kümesi, işareti, artanlığı-azalanlığı,maksimum-minimum noktaları, sıfırları, bire birliği,tekliği-çiftliği, örtenliği, periyodu) matematiksel temsilleri kullanarak belirler.",
+      "code": "MS-MAT.11.3.1-a-04",
+      "name": "Maksimum-minimum noktaları belirleme",
+      "description": "Trigonometrik fonksiyonların maksimum ve minimum noktalarını belirleyebilme",
+      "category": "CONCEPT",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-b",
+      "processComponentText": "Trigonometrik referans fonksiyonların nitel özellikleri ilematematiksel temsilleri arasındaki ilişkileri belirler.",
+      "code": "MS-MAT.11.3.1-b-01",
+      "name": "Özellik-temsili ilişkisi",
+      "description": "Trigonometrik fonksiyonların nitel özellikleri ile grafik veya cebirsel temsilleri arasındaki ilişkiyi belirleyebilme",
+      "category": "REPRESENTATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-c",
+      "processComponentText": "Trigonometrik referans fonksiyonları graﬁk ve cebirseltemsili üzerinde yapılan işlemlerle diğer trigonometrikfonksiyonlara dönüştürür.",
+      "code": "MS-MAT.11.3.1-c-01",
+      "name": "Fonksiyon dönüşümü",
+      "description": "Trigonometrik fonksiyonları grafik veya cebirsel işlemlerle diğer trigonometrik fonksiyonlara dönüştürebilme",
+      "category": "PROCEDURE",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-d",
+      "processComponentText": "Trigonometrik referans fonksiyonlardan türetilenfonksiyonların nitel özelliklerine ilişkin varsayımlardabulunur.",
+      "code": "MS-MAT.11.3.1-d-01",
+      "name": "Türetilmiş fonksiyon varsayımı",
+      "description": "Türetilmiş trigonometrik fonksiyonların nitel özellikleri hakkında varsayım oluşturabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-e",
+      "processComponentText": "Varsayımlarından yararlanıp farklı durumlarla ilgiliörüntüleri listeleyerek türetilen fonksiyonların nitelözellikleriyle ilgili örüntüleri geneller.",
+      "code": "MS-MAT.11.3.1-e-01",
+      "name": "Türetilmiş fonksiyon örüntü genelleme",
+      "description": "Türetilmiş trigonometrik fonksiyonların nitel özellikleri hakkında örüntüler çıkararak genellemeler yapabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-f",
+      "processComponentText": "Genellemelerinin varsayımlarını karşılayıp karşılamadığınıkontrol eder.",
+      "code": "MS-MAT.11.3.1-f-01",
+      "name": "Türetilmiş fonksiyon kontrolü",
+      "description": "Türetilmiş trigonometrik fonksiyonlar hakkında genellemelerin varsayımları karşılayıp karşılamadığını kontrol edebilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-g",
+      "processComponentText": "Genellemelerinden elde ettiği önermeleri uygun sözelveya cebirsel dil ile sunar.",
+      "code": "MS-MAT.11.3.1-g-01",
+      "name": "Türetilmiş fonksiyon önerme sunumu",
+      "description": "Türetilmiş trigonometrik fonksiyonlar hakkında önermeleri uygun sözel veya cebirsel dil ile sunabilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-h",
+      "processComponentText": "Önermelerini graﬁksel olarak doğrular veya cebirselolarak ispatlar.",
+      "code": "MS-MAT.11.3.1-h-01",
+      "name": "Türetilmiş fonksiyon ispatı",
+      "description": "Türetilmiş trigonometrik fonksiyonlar hakkında önermeleri grafiksel veya cebirsel olarak ispatlayabilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-ç",
+      "processComponentText": "Trigonometrik referans fonksiyonlar ile bufonksiyonlardan türetilen fonksiyonların graﬁk temsilleri ilecebirsel temsilleri arasındaki ilişkiyi ifade eder.",
+      "code": "MS-MAT.11.3.1-ç-01",
+      "name": "Grafik-cebirsel ilişki",
+      "description": "Trigonometrik referans ve türetilmiş fonksiyonların grafik temsilleri ile cebirsel temsilleri arasındaki ilişkiyi ifade edebilme",
+      "category": "REPRESENTATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-ğ",
+      "processComponentText": "Elde ettiği önermelerin gerçek yaşam bağlamlarındakikullanışlılığını değerlendirir.",
+      "code": "MS-MAT.11.3.1-ğ-01",
+      "name": "Gerçek yaşam uyarlaması",
+      "description": "Trigonometrik fonksiyon önermelerinin gerçek yaşam bağlamlarındaki kullanışlılığını değerlendirebilme",
+      "category": "INTERPRETATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.1-ı",
+      "processComponentText": "Uyguladığı doğrulama veya ispat yöntemlerinin farklıdurumlardaki kullanışlılığını değerlendirir.",
+      "code": "MS-MAT.11.3.1-ı-01",
+      "name": "İspat yöntemi değerlendirme",
+      "description": "Trigonometrik fonksiyonlarda uygulanan doğrulama veya ispat yöntemlerinin farklı durumlardaki kullanışlılığını değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-a",
+      "processComponentText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlere ilişkin matematiksel bileşenleri (denklemioluşturan fonksiyonların nitel özellikleri ile cebirsel ve graﬁktemsilleri) belirler.",
+      "code": "MS-MAT.11.3.2-a-01",
+      "name": "Trigonometrik denklem bileşeni belirleme",
+      "description": "Trigonometrik fonksiyonlarla ifade edilebilen denklemlerin matematiksel bileşenlerini belirleyebilme",
+      "category": "CONCEPT",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-b",
+      "processComponentText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlere ilişkin matematiksel bileşenlerin aralarındakiilişkileri belirler.",
+      "code": "MS-MAT.11.3.2-b-01",
+      "name": "Denklem bileşeni ilişkisi",
+      "description": "Trigonometrik denklemlerin matematiksel bileşenleri arasındaki ilişkileri belirleyebilme",
+      "category": "REASONING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-c",
+      "processComponentText": "Trigonometrik fonksiyonlarla ifade edilebilendenklemlerin problem bağlamındaki temsillerini farklıtemsillere dönüştürür.",
+      "code": "MS-MAT.11.3.2-c-01",
+      "name": "Temsil dönüşümü",
+      "description": "Trigonometrik denklemlerin temsillerini cebirsel, grafik veya sözel temsillere dönüştürebilme",
+      "category": "REPRESENTATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-d",
+      "processComponentText": "Elde ettiği ve yorumladığı farklı temsillere dayalı olarakproblemin çözümü için strateji oluşturur.",
+      "code": "MS-MAT.11.3.2-d-01",
+      "name": "Trigonometrik denklem stratejisi",
+      "description": "Trigonometrik denklemlerin çözümü için uygun strateji oluşturabilme",
+      "category": "PROBLEM_SOLVING",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-e",
+      "processComponentText": "Belirlediği stratejiyi kullanır.",
+      "code": "MS-MAT.11.3.2-e-01",
+      "name": "Strateji uygulama",
+      "description": "Trigonometrik denklem çözüm stratejisini uygulayarak problemi çözebilme",
+      "category": "PROCEDURE",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-f",
+      "processComponentText": "Elde ettiği çözümü farklı yöntemleri kullanarak doğrular.",
+      "code": "MS-MAT.11.3.2-f-01",
+      "name": "Çözüm doğrulama",
+      "description": "Trigonometrik denklem çözümünü farklı yöntemlerle doğrulayabilme",
+      "category": "VERIFICATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-g",
+      "processComponentText": "Problemin olası çözüm stratejilerini gözden geçirir.",
+      "code": "MS-MAT.11.3.2-g-01",
+      "name": "Çoklu strateji değerlendirme",
+      "description": "Trigonometrik denklem probleminin farklı çözüm stratejilerini karşılaştırarak değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-h",
+      "processComponentText": "Çıkarımlarının geçerliliğini sözel, cebirsel ve graﬁkselargümanlarla değerlendirir.",
+      "code": "MS-MAT.11.3.2-h-01",
+      "name": "Çıkarım değerlendirme",
+      "description": "Trigonometrik denklem çözümünden elde edilen çıkarımların geçerliliğini sözel, cebirsel ve grafiksel argümanlarla değerlendirebilme",
+      "category": "VERIFICATION",
+      "difficulty": "ADVANCED"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-ç",
+      "processComponentText": "Dönüştürdüğü temsillerin problem bağlamındaki anlamını ifade eder.",
+      "code": "MS-MAT.11.3.2-ç-01",
+      "name": "Temsil anlamı",
+      "description": "Trigonometrik denklem probleminde dönüştürülen temsillerin problem bağlamındaki anlamını ifade edebilme",
+      "category": "INTERPRETATION",
+      "difficulty": "INTERMEDIATE"
+    },
+    {
+      "processComponentCode": "MAT.11.3.2-ğ",
+      "processComponentText": "Problemin olası çözüm stratejilerinin trigonometrikfonksiyon içeren farklı problem durumlarında kullanımı ileilgili çıkarımlar yapar.",
+      "code": "MS-MAT.11.3.2-ğ-01",
+      "name": "Strateji genellemesi",
+      "description": "Trigonometrik fonksiyon içeren problemlerde kullanılan çözüm stratejilerinin genel uyarlanabilirliğini değerlendirebilme",
+      "category": "REASONING",
+      "difficulty": "ADVANCED"
+    }
+  ],
+  "summary": {
+    "totalProcessComponents": 60,
+    "totalMicroSkills": 70,
+    "averageMicroSkillsPerPC": 1.17,
+    "source": "MENTORA_MANUAL",
+    "reviewed": true
+  }
+}

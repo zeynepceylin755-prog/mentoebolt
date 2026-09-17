@@ -1,7 +1,11 @@
 import { getEnv } from '../../config/environment.js';
 
 export interface AIConfig {
-  provider: 'openai' | 'anthropic' | 'google' | 'deepseek' | 'mock';
+  // Phase 5F.9-C: only provider families with an actual implementation are
+  // declared. anthropic/google/deepseek were removed — they had no provider
+  // class and silently fell through to mock, advertising support that did not
+  // exist.
+  provider: 'openai' | 'mock';
   model: string;
   apiKey: string;
   baseUrl?: string;
@@ -13,35 +17,14 @@ export interface AIConfig {
 
 export function getAIConfig(): AIConfig {
   const env = getEnv();
-  
+
   const provider = (env.AI_PROVIDER || 'mock') as AIConfig['provider'];
-  
+
   const configs: Record<string, Partial<AIConfig>> = {
     openai: {
-      model: env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+      model: env.OPENAI_MODEL || 'gpt-4o',
       apiKey: env.OPENAI_API_KEY || '',
       baseUrl: 'https://api.openai.com/v1',
-      maxTokens: 4000,
-      temperature: 0.7,
-    },
-    anthropic: {
-      model: env.ANTHROPIC_MODEL || 'claude-3-opus-20240229',
-      apiKey: env.ANTHROPIC_API_KEY || '',
-      baseUrl: 'https://api.anthropic.com/v1',
-      maxTokens: 4000,
-      temperature: 0.7,
-    },
-    google: {
-      model: env.GOOGLE_MODEL || 'gemini-pro',
-      apiKey: env.GOOGLE_API_KEY || '',
-      baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-      maxTokens: 4000,
-      temperature: 0.7,
-    },
-    deepseek: {
-      model: 'deepseek-chat',
-      apiKey: env.DEEPSEEK_API_KEY || '',
-      baseUrl: 'https://api.deepseek.com/v1',
       maxTokens: 4000,
       temperature: 0.7,
     },
@@ -54,7 +37,21 @@ export function getAIConfig(): AIConfig {
     },
   };
 
-  const config = configs[provider] || configs.mock;
+  // No silent fall-through: an unknown provider resolves to no config and the
+  // factory rejects it explicitly.
+  const config = configs[provider];
+  if (!config) {
+    return {
+      provider,
+      model: '',
+      apiKey: '',
+      baseUrl: undefined,
+      maxTokens: 1000,
+      temperature: 0.5,
+      timeout: 30000,
+      maxRetries: 3,
+    };
+  }
   
   return {
     provider,

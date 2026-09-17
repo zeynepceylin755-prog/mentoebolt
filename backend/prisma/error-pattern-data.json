@@ -1,0 +1,644 @@
+{
+  "errorPatterns": [
+    {
+      "code": "EP-CONCEPT-001",
+      "name": "Tanım kümesi kapsamı yanlışlığı",
+      "description": "Fonksiyonun veya işlemin tanım kümesi kapsamını yanlış belirleme veya tanım kümesi dışındaki değerleri hesaba katma",
+      "category": "CONCEPTUAL_MISUNDERSTANDING",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-a-01",
+          "relevance": 0.9,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-a-02",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-a-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyonlarda tanım kümesi (örneğin tanx için x≠π/2+kπ) gibi kısıtlamalar gözden kaçırılarak yanlış sonuçlara ulaşılır"
+    },
+    {
+      "code": "EP-PROCEDURE-001",
+      "name": "İşlem sırası hatası",
+      "description": "Matematiksel işlemleri doğru sırayla uygulamama veya operatör önceliğini gözden kaçırma",
+      "category": "PROCEDURAL_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.1-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.1-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.1-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.1-d-01",
+          "relevance": 0.6,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Dönüşüm işlemlerinde veya karmaşık ifadelerde işlem sırasının yanlış uygulanması sonucu hatalı sonuçlar elde edilir"
+    },
+    {
+      "code": "EP-REPRESENTATION-001",
+      "name": "Grafik gösterimi yanlış okuma",
+      "description": "Grafiksel temsillerdeki bilgileri yanlış yorumlama veya grafikten yanlış çıkarım yapma",
+      "category": "REPRESENTATION_ERROR",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-d-01",
+          "relevance": 0.9,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.1-e-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-ç-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Serpme diyagramları, fonksiyon grafikleri gibi görsel temsillerin yanlış yorumlanması istatistiksel ve fonksiyonel analizlerde hatalara yol açar"
+    },
+    {
+      "code": "EP-REASONING-001",
+      "name": "Örüntü genelleme hatası",
+      "description": "Sınırlı örneklerden geçersiz genellemeler yapma veya örüntüleri yanlış genişletme",
+      "category": "REASONING_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-e-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-g-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-ğ-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyonlarda örüntülerin sınırlı durumlardan geçersiz şekilde genellenmesi veya stratejilerin yanlış genellenmesi"
+    },
+    {
+      "code": "EP-INTERPRETATION-001",
+      "name": "İstatistiksel ilişki yanlış yorumlama",
+      "description": "Korelasyon katsayısı veya istatistiksel ilişkilerin yönünü ve gücünü yanlış yorumlama",
+      "category": "INTERPRETATION_ERROR",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-d-03",
+          "relevance": 0.9,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.1-e-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.2-a-01",
+          "relevance": 0.6,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Korelasyonun nedensellikle karıştırılması veya ilişki gücünün yanlış değerlendirilmesi istatistiksel kararlarda hatalara yol açar"
+    },
+    {
+      "code": "EP-TRANSLATION-001",
+      "name": "Problem koşulunu modele yanlış aktarma",
+      "description": "Gerçek yaşam veya sözel problemdeki koşulları matematiksel modele doğru şekilde aktaramama",
+      "category": "PROBLEM_TRANSLATION_ERROR",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.1-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-d-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "İstatistiksel araştırma senaryolarının veya trigonometrik denklemlerin matematiksel modele yanlış aktarılması"
+    },
+    {
+      "code": "EP-CONDITION-001",
+      "name": "Problem koşulunu gözden kaçırma",
+      "description": "Soruda verilen önemli koşulları, kısıtlamaları veya varsayımları çözüm sırasında gözden kaçırma",
+      "category": "CONDITION_OMISSION",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-c-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Veri toplama koşulları, geometrik kısıtlamalar veya denklem bağlamı gibi önemli detayların gözden kaçırılması"
+    },
+    {
+      "code": "EP-CALCULATION-001",
+      "name": "Trigonometrik değer hesaplama hatası",
+      "description": "Trigonometrik fonksiyon değerlerini, dönüşüm formüllerini veya periyot hesaplarını yanlış hesaplama",
+      "category": "CALCULATION_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-c-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-e-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-f-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik dönüşümler, denklem çözümlerinde yapılan hesaplama hataları"
+    },
+    {
+      "code": "EP-VERIFICATION-001",
+      "name": "Çözüm doğrulama eksikliği",
+      "description": "Elde edilen çözümün doğruluğunu kontrol etmeme veya uygun doğrulama yöntemlerini kullanmama",
+      "category": "VERIFICATION_FAILURE",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-f-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-f-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-h-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyon özelliklerinin veya denklem çözümlerinin doğrulanmaması veya yanlış doğrulama yöntemleri kullanılması"
+    },
+    {
+      "code": "EP-STRATEGY-001",
+      "name": "Uygun çözüm stratejisi seçememe",
+      "description": "Problem için en uygun çözüm stratejisini seçememe veya var olan stratejiyi doğru şekilde uygulayamama",
+      "category": "STRATEGY_ERROR",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-c-01",
+          "relevance": 0.9,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-d-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-d-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Veri toplama yöntemi seçimi, geometrik problem çözüm stratejisi veya trigonometrik denklem stratejisi seçim hataları"
+    },
+    {
+      "code": "EP-REPRESENTATION-002",
+      "name": "Cebirsel gösterim dönüşüm hatası",
+      "description": "Matematiksel ifadeleri farklı cebirsel formlara dönüştürürken hata yapma",
+      "category": "REPRESENTATION_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-c-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.1-d-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyon dönüşümleri veya geometrik temsillerin cebirsel formlara dönüştürülmesindeki hatalar"
+    },
+    {
+      "code": "EP-CONCEPT-002",
+      "name": "Periyot ve simetri kavramı karışıklığı",
+      "description": "Fonksiyonların periyodik özelliklerini veya simetri özelliklerini yanlış anlama",
+      "category": "CONCEPTUAL_MISUNDERSTANDING",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-a-03",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-a-04",
+          "relevance": 0.8,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-ç-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyonların periyodu, artanlık-azalanlık, simetri gibi nitel özelliklerinin yanlış anlaşılması"
+    },
+    {
+      "code": "EP-REASONING-002",
+      "name": "Varsayım-sonuç ilişkisi kopukluğu",
+      "description": "Yapılan varsayımlar ile elde edilen sonuçlar arasında mantıksal ilişki kuramama",
+      "category": "REASONING_ERROR",
+      "severity": "HIGH",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-d-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-f-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-g-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik fonksiyonlarda varsayımların sonuçlarla doğrulanmaması veya varsayım-sonuç ilişkisinin kopuk olması"
+    },
+    {
+      "code": "EP-INTERPRETATION-002",
+      "name": "Gerçek yaşam bağlamı kopukluğu",
+      "description": "Matematiksel sonuçların gerçek yaşam bağlamındaki anlamını doğru şekilde yorumlayamama",
+      "category": "INTERPRETATION_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-ğ-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-ç-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.1-a-01",
+          "relevance": 0.5,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik önermelerin veya istatistiksel sonuçların gerçek yaşam durumlarına uyarlanmasındaki zorluklar"
+    },
+    {
+      "code": "EP-PROCEDURE-003",
+      "name": "Özet istatistik hesaplama hatası",
+      "description": "İstatistiksel özet değerlerini (ortalama, standart sapma vb.) hesaplarken hata yapma",
+      "category": "PROCEDURAL_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-d-02",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.2-a-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.2-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Tablo ve özet istatistik araçlarının kullanımındaki hesaplama hataları"
+    },
+    {
+      "code": "EP-REPRESENTATION-003",
+      "name": "Net şekil haritalama hatası",
+      "description": "3D geometrik şekillerin net şekillerine doğru şekilde eşleştirme yapamama",
+      "category": "REPRESENTATION_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.4-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.4-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.4-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "3D şekillerin 2D net şekillerine haritalanmasındaki görsel temsil hataları"
+    },
+    {
+      "code": "EP-STRATEGY-002",
+      "name": "Araştırma sorusu formülasyon hatası",
+      "description": "İstatistiksel araştırma için uygun araştırma sorusu formül edememe veya soruyu spesifikleştirememe",
+      "category": "STRATEGY_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.1.1-b-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.1-b-02",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.1.2-a-01",
+          "relevance": 0.5,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Araştırma sorularının uygun formda olmaması veya değişkenleri araştırmaya odaklanmaması"
+    },
+    {
+      "code": "EP-VERIFICATION-002",
+      "name": "İspat yöntemi seçim hatası",
+      "description": "Matematiksel önermeleri ispatlamak için uygun yöntemi seçememe",
+      "category": "VERIFICATION_FAILURE",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.1-h-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.1-ı-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.3.2-h-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Trigonometrik önermelerin ispatında grafiksel veya cebirsel yöntemlerin yanlış seçilmesi"
+    },
+    {
+      "code": "EP-CONDITION-002",
+      "name": "Geometrik kısıtlama gözden kaçırma",
+      "description": "Geometrik problemlerdeki uzunluk, açı veya poziyon kısıtlamalarını gözden kaçırma",
+      "category": "CONDITION_OMISSION",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.5-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-e-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Geometrik şekillerde uzunluk, açı veya koordinat kısıtlamalarının çözümde gözden kaçırılması"
+    },
+    {
+      "code": "EP-REASONING-003",
+      "name": "Geometrik önerme ispatı hatası",
+      "description": "Geometrik önermeleri ispatlarken mantıksal adımları doğru sırayla uygulayamama veya gerekli varsayımları eksik belirtme",
+      "category": "REASONING_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.1-e-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.1-ç-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Dörtgen önermelerini ispatlarken veya formülasyon yaparken mantıksal hatalar"
+    },
+    {
+      "code": "EP-VERIFICATION-003",
+      "name": "Geometrik ispat doğrulama hatası",
+      "description": "Geometrik ispatların geçerliliğini doğru şekilde değerlendirememe veya uygun doğrulama yöntemlerini kullanmama",
+      "category": "VERIFICATION_FAILURE",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.1-f-01",
+          "relevance": 0.9,
+          "isPrimary": true
+        }
+      ],
+      "rationale": "Geometrik ispatların değerlendirilmesindeki doğrulama hataları"
+    },
+    {
+      "code": "EP-CONCEPT-003",
+      "name": "Geometrik kavram ilişkisi karışıklığı",
+      "description": "Geometrik şekiller arasındaki hiyerarşik veya özellik ilişkilerini yanlış anlama",
+      "category": "CONCEPTUAL_MISUNDERSTANDING",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.2-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.2-b-01",
+          "relevance": 0.8,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Geometrik şekillerin sınıflandırılması ve özellikleri arasındaki ilişkilerin yanlış anlaşılması"
+    },
+    {
+      "code": "EP-REPRESENTATION-004",
+      "name": "Geometrik temsil seçim hatası",
+      "description": "Geometrik problemler için uygun temsil (çizim, net şekil, koordinat sistemi) seçememe",
+      "category": "REPRESENTATION_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.3-a-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.3-b-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.3-c-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.3-ç-01",
+          "relevance": 0.6,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Geometrik ilişkileri göstermek için uygun temsil seçme hataları"
+    },
+    {
+      "code": "EP-PROCEDURE-004",
+      "name": "Net şekil çizim hatası",
+      "description": "3D geometrik şekillerin net şekillerini doğru şekilde çizememe",
+      "category": "PROCEDURAL_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.4-d-01",
+          "relevance": 0.8,
+          "isPrimary": true
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.4-ç-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "3D şekillerin 2D net şekillerine çizilmesindeki prosedürel hatalar"
+    },
+    {
+      "code": "EP-REASONING-004",
+      "name": "Geometrik ilişki çıkarma hatası",
+      "description": "Geometrik şekillerden niteliksel ve niceliksel ilişkileri doğru şekilde çıkaramama",
+      "category": "REASONING_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.2.5-f-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-g-01",
+          "relevance": 0.7,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-h-01",
+          "relevance": 0.6,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-ç-01",
+          "relevance": 0.6,
+          "isPrimary": false
+        },
+        {
+          "microSkillCode": "MS-MAT.11.2.5-ğ-01",
+          "relevance": 0.5,
+          "isPrimary": false
+        }
+      ],
+      "rationale": "Geometrik şekillerden ilişki çıkarımındaki muhakeme hataları"
+    },
+    {
+      "code": "EP-REASONING-005",
+      "name": "Trigonometrik denklem bileşeni ilişkisi kopukluğu",
+      "description": "Trigonometrik denklemlerin matematiksel bileşenleri arasındaki ilişkileri doğru kuramama",
+      "category": "REASONING_ERROR",
+      "severity": "MEDIUM",
+      "mappedMicroSkills": [
+        {
+          "microSkillCode": "MS-MAT.11.3.2-b-01",
+          "relevance": 0.9,
+          "isPrimary": true
+        }
+      ],
+      "rationale": "Trigonometrik denklemlerin bileşenleri arasındaki ilişki kurma hataları"
+    }
+  ]
+}

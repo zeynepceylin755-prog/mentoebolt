@@ -113,7 +113,12 @@ export class AIRecommendationService {
         },
       };
     } catch (error) {
-      logger.error({ error, request }, 'AI recommendation generation failed');
+      // Phase 5F.9-A (security): log identifiers/metadata only, never the
+      // student's mastery payload.
+      logger.error(
+        { studentId: request.studentId, error: error instanceof Error ? error.message : String(error) },
+        'AI recommendation generation failed'
+      );
       return this.getFallbackResult(request);
     }
   }

@@ -3,6 +3,7 @@ import { AssessmentController } from '../controllers/AssessmentController.js';
 import { AuthMiddleware } from '../middleware/auth.js';
 import { OwnershipGuard } from '../middleware/ownership.js';
 import { validate } from '../middleware/validation.js';
+import { idempotencyKeyRequired } from '../middleware/idempotency.js';
 import { z } from 'zod';
 
 const createAssessmentSchema = z.object({
@@ -19,8 +20,11 @@ const addQuestionsSchema = z.object({
   questionIds: z.array(z.string()).min(1),
 });
 
+// Phase 6.7: `studentId` is no longer authoritative. It is accepted (optional)
+// for backward compatibility with existing clients but is IGNORED — the
+// authenticated User → StudentProfile chain determines the attempt owner.
 const startAssessmentSchema = z.object({
-  studentId: z.string().min(1),
+  studentId: z.string().min(1).optional(),
   assessmentId: z.string().min(1),
 });
 
@@ -73,12 +77,14 @@ export function createAssessmentRoutes(
 
   router.post(
     '/assessments/submit-answer',
+    idempotencyKeyRequired(),
     validate(submitAnswerSchema),
     assessmentController.submitAnswer
   );
 
   router.post(
     '/assessments/complete',
+    idempotencyKeyRequired(),
     validate(completeAssessmentSchema),
     assessmentController.completeAssessment
   );

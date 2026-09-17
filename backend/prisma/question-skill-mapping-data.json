@@ -1,0 +1,113 @@
+{
+  "artifactType": "mentora-knowledge-layer/question-skill-mapping/v1",
+  "description": "DESIGN ARTIFACT ONLY. This file is a design proposal for the Question -> MicroSkill mapping layer. It is NOT seeded to the database. It is produced by the QuestionSkillMapping DESIGN phase, which is review-only.",
+  "generatedAt": "design-phase",
+  "status": "REVIEW_ONLY_NOT_SEED",
+  "authority": {
+    "microSkillSource": "database (MicroSkill, 70 rows, MEB 11th grade math curriculum)",
+    "questionSource": "database (Question, 159 rows)",
+    "hierarchy": [
+      "MEB curriculum",
+      "Mentora MicroSkill",
+      "Question content"
+    ]
+  },
+  "semantics": {
+    "primary": "The single MicroSkill the question is fundamentally designed to measure. Maximum 1 per question.",
+    "secondary": "A MicroSkill genuinely required to solve the question, but not the measurement target. 0..N per question.",
+    "relevance": "How strongly the MicroSkill relates to the question. Range 0.0-1.0.",
+    "confidence": "How certain we are that the mapping itself is correct. Range 0.0-1.0. Stored in schema field aiConfidence.",
+    "mappingSource": "Provenance of the mapping. Manual review = MANUAL_REVIEW."
+  },
+  "constraints": {
+    "maxPrimaryPerQuestion": 1,
+    "primaryPerQuestion": "exactly 1 when mapped",
+    "secondaryPerQuestion": "0..N",
+    "newMicroSkillsAllowed": false,
+    "mapToProcessComponentDirectly": false,
+    "mapToLearningOutcomeDirectly": false,
+    "questionToErrorPatternMapping": "OUT OF SCOPE for this layer"
+  },
+  "summary": {
+    "questionsTotal": 159,
+    "questionsMapped": 0,
+    "questionsUnmapped": 159,
+    "primaryMappings": 0,
+    "secondaryMappings": 0,
+    "reason": "Assessed question corpus contains no curriculum-aligned, grade-11 mathematics content. No defensible Question -> MicroSkill mapping can be produced. See question-skill-mapping-review.md."
+  },
+  "mappings": [],
+  "unmappedQuestions": {
+    "note": "All 159 questions are unmapped. Reason categories are assigned per question class below rather than repeating 159 entries.",
+    "totalUnmapped": 159,
+    "reasonCategories": [
+      {
+        "reason": "PLACEHOLDER_ARITHMETIC",
+        "description": "Content is single-digit addition drills such as \"What is 2 + 2?\". Not grade-11 mathematics. Belongs to no Theme/LearningOutcome/ProcessComponent/MicroSkill in the 70-skill set.",
+        "affectedCount": 130,
+        "exampleQuestionIds": [
+          "cmtvnrfz5000612m93rqbscru",
+          "cmtvnrfzn000k12m9mjlpqi28",
+          "cmtvnrfzw000v12m9v74mzeo6"
+        ],
+        "mappable": false
+      },
+      {
+        "reason": "PLACEHOLDER_GENERIC",
+        "description": "Content is literal placeholder strings such as \"Question 1\", \"Question 2\", \"Question\", \"Test question\". No mathematical task is expressed, so no MicroSkill can be identified.",
+        "affectedCount": 27,
+        "exampleQuestionIds": [
+          "cmtvntz8l0011715d886wcpcm",
+          "cmtvntz8m0012715d96nr3fs1",
+          "cmtvnrgai00bh12m9kyeos9u3"
+        ],
+        "mappable": false
+      },
+      {
+        "reason": "OUT_OF_CURRICULUM_TOPIC",
+        "description": "Content is real mathematics (linear function evaluation, function definition) but the topic (functions) is not part of the MEB grade-11 Themes represented by the 70 MicroSkills. There is no valid MicroSkill target.",
+        "affectedCount": 2,
+        "exampleQuestionIds": [
+          "cmtvpe8cq0002ytx2v9ahw95z",
+          "cmtvpe8cr0007ytx2gvatriqr"
+        ],
+        "mappable": false
+      }
+    ]
+  },
+  "designExemplars": {
+    "note": "Illustrative mapping rows showing the intended output SHAPE for a future, curriculum-aligned question corpus. These are NOT derived from existing database questions and MUST NOT be seeded as-is. Their questionIds are placeholders.",
+    "rows": [
+      {
+        "questionId": "<FUTURE: a question asking the student to read a scatter plot and describe the relationship>",
+        "microSkillCode": "MS-MAT.11.1.1-d-01",
+        "isPrimary": true,
+        "relevance": 0.95,
+        "confidence": 0.9,
+        "mappingSource": "MANUAL_REVIEW",
+        "reviewed": false,
+        "rationale": "Measurement target is scatter plot selection and interpretation."
+      },
+      {
+        "questionId": "<FUTURE: same scatter plot question as above>",
+        "microSkillCode": "MS-MAT.11.1.1-e-01",
+        "isPrimary": false,
+        "relevance": 0.7,
+        "confidence": 0.75,
+        "mappingSource": "MANUAL_REVIEW",
+        "reviewed": false,
+        "rationale": "Solving requires reading the scatter plot, but the primary target is the higher-level interpretation skill."
+      },
+      {
+        "questionId": "<FUTURE: a question asking for the correlation coefficient of a dataset>",
+        "microSkillCode": "MS-MAT.11.1.1-d-03",
+        "isPrimary": true,
+        "relevance": 0.95,
+        "confidence": 0.9,
+        "mappingSource": "MANUAL_REVIEW",
+        "reviewed": false,
+        "rationale": "Measurement target is correlation coefficient interpretation."
+      }
+    ]
+  }
+}

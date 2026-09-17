@@ -11,6 +11,7 @@ export interface UserProps {
   emailVerified: boolean;
   loginAttempts?: number;
   lockedUntil?: Date;
+  deletedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -25,6 +26,7 @@ export class User {
   public readonly emailVerified: boolean;
   public readonly loginAttempts: number;
   public readonly lockedUntil?: Date;
+  public readonly deletedAt?: Date;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -38,6 +40,7 @@ export class User {
     this.emailVerified = props.emailVerified;
     this.loginAttempts = props.loginAttempts || 0;
     this.lockedUntil = props.lockedUntil;
+    this.deletedAt = props.deletedAt;
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();
   }

@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Anchor-free hash routing must not leave content under the sticky header. */
+    scroll-padding-top: 4.5rem;
+  }
+
+  body {
+    background-color: #f8f5ef;
+    color: #15233b;
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Mobile Safari briefly widens the page when a rotated photo is decoded. */
+    overflow-x: hidden;
+  }
+
+  /*
+   * A single, visible focus treatment for every interactive element.
+   *
+   * Individual components also declare their own rings, but this base rule is the
+   * backstop so no focusable element can ever be invisible to a keyboard user.
+   */
+  :focus-visible {
+    outline: 2px solid rgba(95, 122, 102, 0.9);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    /* Content revealed on scroll must never stay hidden when motion is off. */
+    .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Motion is a progressive enhancement, never a visibility requirement. */
+  .reveal,
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .reveal-delay-1,
+  .reveal-delay-2,
+  .reveal-delay-3,
+  .reveal-delay-4 {
+    transition-delay: 0ms;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-grow-width {
+    transform-origin: left center;
+    animation: grow-width 1s ease-out forwards;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  /*
+   * The editorial serif is reserved for the public marketing surface. It is
+   * opt-in via `.font-display` rather than applied globally, because the student
+   * product's own screens stay on the sans stack.
+   */
+  .font-display {
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    font-variation-settings: 'opsz' 96;
+  }
+
+  .editorial-kicker {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #707070;
+  }
+}

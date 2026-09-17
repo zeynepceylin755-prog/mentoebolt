@@ -17,7 +17,18 @@ export interface ProgressSummary {
 
 export interface SkillProgress {
   skillId: string;
-  skillName: string;
+  /**
+   * Phase 7.4 — the student-facing curriculum label for this skill.
+   *
+   * Resolved from the row's authoritative MicroSkill relation. It is `null` when
+   * no MicroSkill can be resolved (no `microSkillId`, the row is inactive, or the
+   * microSkill was deleted), and the UI must then say "henüz etiketlenmedi"
+   * rather than print an internal identifier.
+   *
+   * It is deliberately NOT seeded with `skillId`: the previous behaviour made the
+   * browser render raw ids such as `ms-1` as if they were curriculum names.
+   */
+  skillName: string | null;
   masteryLevel: number;
   confidence: number;
   attempts: number;
@@ -92,52 +103,63 @@ export class ProgressService {
           skillId,
         },
       },
+      include: { microSkill: true },
     });
 
     if (!mastery) return null;
 
-    const accuracy = mastery.attempts > 0 
-      ? (mastery.correctAttempts / mastery.attempts) * 100 
-      : 0;
+    return this.toSkillProgress(mastery);
+  }
+
+  async getAllSkillProgress(studentId: string): Promise<SkillProgress[]> {
+    // The microSkill relation is included so every row can carry a real
+    // curriculum label instead of an internal id (Phase 7.4).
+    const masteries = await this.prisma.skillMastery.findMany({
+      where: { studentId },
+      include: { microSkill: true },
+    });
+
+    return masteries.map((mastery) => this.toSkillProgress(mastery));
+  }
+
+  /**
+   * Map a persisted mastery row onto the student-facing progress shape.
+   *
+   * Single source of truth for the projection so `getSkillProgress` and
+   * `getAllSkillProgress` can never disagree about a field.
+   */
+  private toSkillProgress(mastery: {
+    skillId: string;
+    masteryLevel: number;
+    confidence: number;
+    attempts: number;
+    correctAttempts: number;
+    trend: string | null;
+    lastAttemptAt: Date | null;
+    microSkill?: { name: string; isActive: boolean } | null;
+  }): SkillProgress {
+    const accuracy =
+      mastery.attempts > 0 ? (mastery.correctAttempts / mastery.attempts) * 100 : 0;
+
+    // An inactive microSkill is treated as unresolved: a retired curriculum node
+    // must not be presented to a student as their current topic.
+    const microSkill = mastery.microSkill;
+    const resolvedName =
+      microSkill && microSkill.isActive && microSkill.name.trim().length > 0
+        ? microSkill.name.trim()
+        : null;
 
     return {
       skillId: mastery.skillId,
-      skillName: mastery.skillId,
+      skillName: resolvedName,
       masteryLevel: mastery.masteryLevel,
       confidence: mastery.confidence,
       attempts: mastery.attempts,
       correctAttempts: mastery.correctAttempts,
       accuracy,
-      trend: mastery.trend as 'UP' | 'DOWN' | 'STABLE' || 'STABLE',
+      trend: (mastery.trend as 'UP' | 'DOWN' | 'STABLE') || 'STABLE',
       lastAttemptAt: mastery.lastAttemptAt,
     };
-  }
-
-  async getAllSkillProgress(studentId: string): Promise<SkillProgress[]> {
-    const masteries = await this.prisma.skillMastery.findMany({
-      where: { studentId },
-    });
-
-    const results: SkillProgress[] = [];
-    for (const mastery of masteries) {
-      const accuracy = mastery.attempts > 0 
-        ? (mastery.correctAttempts / mastery.attempts) * 100 
-        : 0;
-
-      results.push({
-        skillId: mastery.skillId,
-        skillName: mastery.skillId,
-        masteryLevel: mastery.masteryLevel,
-        confidence: mastery.confidence,
-        attempts: mastery.attempts,
-        correctAttempts: mastery.correctAttempts,
-        accuracy,
-        trend: mastery.trend as 'UP' | 'DOWN' | 'STABLE' || 'STABLE',
-        lastAttemptAt: mastery.lastAttemptAt,
-      });
-    }
-
-    return results;
   }
 
   async getTimeSeriesProgress(

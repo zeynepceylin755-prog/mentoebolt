@@ -1,8 +1,18 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 // Load test environment
 dotenv.config({ path: '.env.test' });
+
+// Force an isolated test database regardless of what .env / .env.test contain.
+// Without this, tests fall back to `file:./dev.db` and mutate the development
+// database, causing cross-file interference and non-deterministic failures.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const testDbPath = path.resolve(__dirname, '../prisma/test.db');
+process.env.DATABASE_URL = `file:${testDbPath}`;
+process.env.NODE_ENV = 'test';
 
 // Mock pino-http correctly
 vi.mock('pino-http', async (importOriginal) => {
@@ -47,6 +57,20 @@ vi.mock('../src/infrastructure/config/environment.js', async () => {
       RATE_LIMIT_MAX_REQUESTS: '100',
       DATABASE_URL: 'file:./test.db',
       AI_PROVIDER: 'mock',
+      // Phase 5F.9-A: OCR defaults to the safe mock provider in tests.
+      OCR_PROVIDER: 'mock',
+      OCR_MODEL: 'gpt-4o',
+      OCR_TIMEOUT_MS: '30000',
+      OCR_MAX_RETRIES: '2',
+      OCR_MAX_TOKENS: '1024',
+      OCR_MAX_IMAGE_BYTES: String(7 * 1024 * 1024),
+      OCR_ALLOW_EXTERNAL_PROVIDER: 'false',
+      // Phase 5F.9-B: Question Understanding defaults to mock in tests.
+      QUESTION_UNDERSTANDING_PROVIDER: 'mock',
+      QUESTION_UNDERSTANDING_MODEL: 'gpt-4o',
+      QUESTION_UNDERSTANDING_TIMEOUT_MS: '30000',
+      QUESTION_UNDERSTANDING_MAX_RETRIES: '2',
+      QUESTION_UNDERSTANDING_ALLOW_EXTERNAL_PROVIDER: 'false',
     })),
   };
 });
@@ -132,18 +156,63 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  // Phase 7.3: reset in-memory rate-limit counters. The limiters store state
+  // per-process; because all test files share one fork, counters accumulated
+  // across files and a later file could be spuriously rate-limited (the known
+  // full-suite flake). Resetting before each test makes each file independent.
   try {
-    await prisma.questionAttempt.deleteMany({});
-    await prisma.learningSessionQuestion.deleteMany({});
-    await prisma.learningSession.deleteMany({});
-    await prisma.studentProfile.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.question.deleteMany({});
-    await prisma.assessment.deleteMany({});
-    await prisma.refreshToken.deleteMany({});
-    await prisma.session.deleteMany({});
-  } catch (error) {
-    // Ignore errors if tables don't exist
+    const { RateLimiter } = await import('../src/infrastructure/security/RateLimiter.js');
+    RateLimiter.resetAll();
+  } catch {
+    // A partially initialised module must never abort the whole suite.
+  }
+
+  // Delete in child -> parent order to respect foreign keys, enabling FKs
+  // first (SQLite does not enforce them by default). Guard each deletion so a
+  // missing table (e.g. a partially migrated DB) does not abort the run.
+  await prisma.$executeRawUnsafe('PRAGMA foreign_keys = ON').catch(() => {});
+  const tables = [
+    'questionSkillMapping',
+    'errorPatternMicroSkill',
+    // Phase 5A: question ingestion layer must be cleared before Question and before
+    // QuestionSource (questionAttempt references questionInstance, so it is already
+    // deleted earlier in this list).
+    'curriculumCandidate',
+    'questionIngestion',
+    'questionInstance',
+    'microSkill',
+    'errorPattern',
+    'masteryAudit',
+    'idempotencyRecord',
+    'outboxEvent',
+    'errorAnalysis',
+    'diagnosticResult',
+    'assessmentResult',
+    'questionAttempt',
+    'assessmentAttempt',
+    'learningSessionQuestion',
+    'learningSession',
+    'recommendation',
+    'learningProgress',
+    'skillMastery',
+    'topicMastery',
+    'assessmentQuestion',
+    'assessment',
+    'questionOption',
+    'question',
+    'questionSource',
+    'refreshToken',
+    'session',
+    'auditLog',
+    'studentProfile',
+    'user',
+  ];
+  for (const table of tables) {
+    try {
+      await (prisma as any)[table].deleteMany({});
+    } catch (error) {
+      // Ignore errors if the table does not exist yet
+    }
   }
 });
 

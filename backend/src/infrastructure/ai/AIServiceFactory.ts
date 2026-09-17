@@ -24,14 +24,23 @@ export class AIServiceFactory {
 
     const config = getAIConfig();
     
+    // Phase 5F.9-C: the factory is truthful. Only providers that actually have an
+    // implementation are accepted; anything else is a hard configuration error
+    // rather than a silent fall-through to mock.
     switch (config.provider) {
       case 'openai':
+        if (!config.apiKey || config.apiKey.trim().length === 0) {
+          throw new Error('AI_PROVIDER=openai requires OPENAI_API_KEY to be configured');
+        }
         this.provider = new OpenAIProvider();
         break;
       case 'mock':
-      default:
         this.provider = new MockAIProvider();
         break;
+      default:
+        throw new Error(
+          `Unsupported AI_PROVIDER: ${String(config.provider)} (supported: mock, openai)`
+        );
     }
 
     logger.info({ provider: config.provider, model: config.model }, 'AI provider initialized');

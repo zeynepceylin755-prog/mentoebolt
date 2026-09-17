@@ -177,7 +177,6 @@ export class OptimizedMasteryService {
 
       await this.prisma.learningProgress.createMany({
         data: progressData,
-        skipDuplicates: true,
       });
 
       logger.debug({

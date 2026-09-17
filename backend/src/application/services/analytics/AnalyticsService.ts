@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../../../infrastructure/logging/logger.js';
+import { isAnalyticsEligibleAttempt } from '../../../domain/questions/questionQuality.js';
 
 export interface AnalyticsSummary {
   totalStudents: number;
@@ -16,9 +17,13 @@ export class AnalyticsService {
   constructor(private readonly prisma: PrismaClient) {}
 
   async getStudentAnalytics(studentId: string): Promise<any> {
-    const attempts = await this.prisma.questionAttempt.findMany({
+    // Phase 7.2: analytics must not be contaminated by fixture questions or by
+    // unevaluable (NOT_EVALUABLE) attempts, which carry no correctness signal.
+    const allAttempts = await this.prisma.questionAttempt.findMany({
       where: { studentId },
+      include: { question: true },
     });
+    const attempts = allAttempts.filter(isAnalyticsEligibleAttempt);
 
     const sessions = await this.prisma.learningSession.count({
       where: { studentId },
@@ -77,10 +82,13 @@ export class AnalyticsService {
 
     const students = await this.prisma.studentProfile.count();
     const sessions = await this.prisma.learningSession.count({ where });
-    const attempts = await this.prisma.questionAttempt.findMany({
+    const allAttempts = await this.prisma.questionAttempt.findMany({
       where,
       include: { question: true },
     });
+    // Phase 7.2: fixture-question attempts and unevaluable attempts are excluded
+    // from system accuracy/mastery analytics — they are not real learning signals.
+    const attempts = allAttempts.filter((a) => isAnalyticsEligibleAttempt(a));
 
     const totalQuestions = attempts.length;
     const correctQuestions = attempts.filter(a => a.isCorrect).length;
@@ -112,12 +120,14 @@ export class AnalyticsService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentAttempts = await this.prisma.questionAttempt.findMany({
+    const recentAttemptsRaw = await this.prisma.questionAttempt.findMany({
       where: {
         createdAt: { gte: thirtyDaysAgo },
       },
       orderBy: { createdAt: 'asc' },
+      include: { question: true },
     });
+    const recentAttempts = recentAttemptsRaw.filter((a) => isAnalyticsEligibleAttempt(a));
 
     const dailyActivity: Record<string, { sessions: Set<string>; attempts: number }> = {};
     for (const attempt of recentAttempts) {
@@ -153,7 +163,7 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const attempts = await this.prisma.questionAttempt.findMany({
+    const allAttempts = await this.prisma.questionAttempt.findMany({
       where: {
         studentId,
         createdAt: { gte: startDate },
@@ -161,6 +171,8 @@ export class AnalyticsService {
       orderBy: { createdAt: 'asc' },
       include: { question: true },
     });
+    // Phase 7.2: trends exclude fixture and unevaluable attempts.
+    const attempts = allAttempts.filter((a) => isAnalyticsEligibleAttempt(a));
 
     const dailyStats: Record<string, { 
       correct: number; 

@@ -114,5 +114,19 @@ export const openapi = {
         },
       },
     },
+    '/recommendations/next': {
+      get: {
+        tags: ['Learning'],
+        summary: "Get the authenticated student's next learning action",
+        description:
+          'Resolves the caller\'s StudentProfile from the authenticated user and ' +
+          'returns the next recommended learning action. The server never accepts a ' +
+          'studentId from the request.',
+        responses: {
+          '200': { description: 'Next learning action for the authenticated student' },
+          '401': { description: 'Authentication required / student profile not found' },
+        },
+      },
+    },
   },
 };

@@ -1,25 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 
 import bootstrap from '../../src/index.js';
+import { prisma } from '../setup.js';
 
 describe('Auth API Integration', () => {
   let app: express.Application;
-  let prisma: PrismaClient;
 
   beforeAll(async () => {
     app = await bootstrap();
-    prisma = new PrismaClient();
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
   });
 
   beforeEach(async () => {
-    // Clean database before each test
+    // Clean database before each test using the global setup's prisma
     try {
       await prisma.questionAttempt.deleteMany({});
       await prisma.learningSessionQuestion.deleteMany({});
@@ -33,6 +27,10 @@ describe('Auth API Integration', () => {
     } catch (error) {
       // Ignore errors if tables don't exist
     }
+  });
+
+  afterAll(async () => {
+    // No cleanup needed - global setup handles disconnect
   });
 
   describe('POST /auth/register', () => {
@@ -92,7 +90,7 @@ describe('Auth API Integration', () => {
     beforeEach(async () => {
       // Register a test user before each login test
       testEmail = `login${Date.now()}@example.com`;
-      const registerResponse = await request(app)
+      await request(app)
         .post('/api/v1/auth/register')
         .send({
           email: testEmail,
@@ -101,10 +99,6 @@ describe('Auth API Integration', () => {
           lastName: 'Test',
           grade: 11,
         });
-
-      // Log the register response for debugging
-      console.log('Register status:', registerResponse.status);
-      console.log('Register body:', registerResponse.body);
     });
 
     it('should login successfully', async () => {
@@ -114,8 +108,6 @@ describe('Auth API Integration', () => {
           email: testEmail,
           password: testPassword,
         });
-
-      console.log('Login response:', response.status, response.body);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -142,6 +134,48 @@ describe('Auth API Integration', () => {
           email: 'nonexistent@example.com',
           password: testPassword,
         });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+  });
+
+  describe('POST /auth/logout', () => {
+    it('should logout successfully with authentication', async () => {
+      // First register and login
+      const email = `logout${Date.now()}@example.com`;
+      const password = 'Test123!@#';
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          email,
+          password,
+          firstName: 'Logout',
+          lastName: 'Test',
+          grade: 11,
+        });
+
+      const loginResponse = await request(app)
+        .post('/api/v1/auth/login')
+        .send({
+          email,
+          password,
+        });
+
+      const accessToken = loginResponse.body.data.tokens.accessToken;
+
+      // Now logout with authentication
+      const logoutResponse = await request(app)
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(logoutResponse.status).toBe(200);
+      expect(logoutResponse.body.success).toBe(true);
+    });
+
+    it('should fail logout without authentication', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/logout');
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);

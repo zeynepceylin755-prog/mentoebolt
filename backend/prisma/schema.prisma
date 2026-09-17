@@ -8,56 +8,55 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  passwordHash    String?
-  firstName       String
-  lastName        String
-  role            String    @default("STUDENT")
-  emailVerified   Boolean   @default(false)
-  emailVerifiedAt DateTime?
-  verificationToken String?
+  id                      String              @id @default(cuid())
+  email                   String              @unique
+  passwordHash            String?
+  firstName               String
+  lastName                String
+  role                    String              @default("STUDENT")
+  emailVerified           Boolean             @default(false)
+  emailVerifiedAt         DateTime?
+  verificationToken       String?
   verificationTokenExpiry DateTime?
-  resetToken      String?
-  resetTokenExpiry DateTime?
-  lastLoginAt     DateTime?
-  loginAttempts   Int       @default(0)
-  lockedUntil     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-
-  studentProfile  StudentProfile?
-  refreshTokens   RefreshToken[]
-  sessions        Session[]
-  auditLogs       AuditLog[]
-  idempotencyRecords IdempotencyRecord[]
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  lastLoginAt             DateTime?
+  loginAttempts           Int                 @default(0)
+  lockedUntil             DateTime?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  deletedAt               DateTime?
+  auditLogs               AuditLog[]
+  idempotencyRecords      IdempotencyRecord[]
+  refreshTokens           RefreshToken[]
+  sessions                Session[]
+  studentProfile          StudentProfile?
 
   @@index([email])
   @@index([role])
 }
 
 model StudentProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  grade           Int       @default(11)
-  school          String?
-  learningStage   String    @default("DISCOVERY")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  learningSessions LearningSession[]
-  questionAttempts QuestionAttempt[]
-  skillMasteries  SkillMastery[]
-  topicMasteries  TopicMastery[]
-  learningProgress LearningProgress[]
-  errorAnalyses   ErrorAnalysis[]
-  recommendations Recommendation[]
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  grade              Int                 @default(11)
+  school             String?
+  learningStage      String              @default("DISCOVERY")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   assessmentAttempts AssessmentAttempt[]
-  assessmentResults AssessmentResult[]
-  diagnosticResults DiagnosticResult[]
-  masteryAudits   MasteryAudit[]
+  assessmentResults  AssessmentResult[]
+  diagnosticResults  DiagnosticResult[]
+  errorAnalyses      ErrorAnalysis[]
+  learningProgress   LearningProgress[]
+  learningSessions   LearningSession[]
+  masteryAudits      MasteryAudit[]
+  questionAttempts   QuestionAttempt[]
+  questionInstances  QuestionInstance[]
+  recommendations    Recommendation[]
+  skillMasteries     SkillMastery[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicMasteries     TopicMastery[]
 
   @@index([userId])
   @@index([grade])
@@ -65,21 +64,20 @@ model StudentProfile {
 }
 
 model LearningSession {
-  id              String    @id @default(cuid())
+  id              String                    @id @default(cuid())
   studentId       String
-  sessionType     String    @default("PRACTICE")
-  status          String    @default("ACTIVE")
-  startedAt       DateTime  @default(now())
+  sessionType     String                    @default("PRACTICE")
+  status          String                    @default("ACTIVE")
+  startedAt       DateTime                  @default(now())
   endedAt         DateTime?
-  totalQuestions  Int       @default(0)
-  correctAnswers  Int       @default(0)
+  totalQuestions  Int                       @default(0)
+  correctAnswers  Int                       @default(0)
   durationSeconds Int?
-  expiresAt       DateTime?
   metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  expiresAt       DateTime?
+  student         StudentProfile            @relation(fields: [studentId], references: [id], onDelete: Cascade)
   questions       LearningSessionQuestion[]
   attempts        QuestionAttempt[]
 
@@ -91,18 +89,17 @@ model LearningSession {
 }
 
 model LearningSessionQuestion {
-  id              String    @id @default(cuid())
-  sessionId       String
-  questionId      String
-  order           Int
-  status          String    @default("PENDING")
-  answeredAt      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  session         LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question        Question  @relation(fields: [questionId], references: [id])
-  attempt         QuestionAttempt?
+  id         String           @id @default(cuid())
+  sessionId  String
+  questionId String
+  order      Int
+  status     String           @default("PENDING")
+  answeredAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  question   Question         @relation(fields: [questionId], references: [id])
+  session    LearningSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  attempt    QuestionAttempt?
 
   @@unique([sessionId, questionId])
   @@index([sessionId])
@@ -111,70 +108,83 @@ model LearningSessionQuestion {
 }
 
 model Question {
-  id              String    @id @default(cuid())
-  content         String
-  type            String    @default("MULTIPLE_CHOICE")
-  difficulty      Int       @default(1)
-  skillId         String
-  learningObjectiveId String?
-  correctAnswer   String
-  explanation     String?
-  isActive        Boolean   @default(true)
-  exposureCount   Int       @default(0)
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  options         QuestionOption[]
-  attempts        QuestionAttempt[]
-  sessionQuestions LearningSessionQuestion[]
-  assessmentQuestions AssessmentQuestion[]
+  id                   String                    @id @default(cuid())
+  content              String
+  type                 String                    @default("MULTIPLE_CHOICE")
+  difficulty           Int                       @default(1)
+  skillId              String
+  learningObjectiveId  String?
+  correctAnswer        String
+  explanation          String?
+  isActive             Boolean                   @default(true)
+  exposureCount        Int                       @default(0)
+  metadata             String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  sourceId             String?
+  origin               String?
+  trust                String                    @default("UNVERIFIED")
+  sourceReference      String?
+  isFixture            Boolean                   @default(false)
+  canonicalKey         String?                   @unique
+  assessmentQuestions  AssessmentQuestion[]
+  curriculumCandidates CurriculumCandidate[]
+  sessionQuestions     LearningSessionQuestion[]
+  source               QuestionSource?           @relation(fields: [sourceId], references: [id])
+  attempts             QuestionAttempt[]
+  ingestions           QuestionIngestion?        @relation("QuestionIngestionResult")
+  instances            QuestionInstance[]
+  options              QuestionOption[]
+  skillMappings        QuestionSkillMapping[]
 
   @@index([skillId])
   @@index([learningObjectiveId])
   @@index([difficulty])
   @@index([isActive])
+  @@index([sourceId])
+  @@index([trust])
+  @@index([isFixture])
 }
 
 model QuestionOption {
-  id          String    @id @default(cuid())
-  questionId  String
-  text        String
-  isCorrect   Boolean   @default(false)
-  order       Int
-  createdAt   DateTime  @default(now())
-
-  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int
+  createdAt  DateTime @default(now())
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([questionId, order])
   @@index([questionId])
 }
 
 model QuestionAttempt {
-  id              String    @id @default(cuid())
-  studentId       String
-  questionId      String
-  sessionId       String?
-  sessionQuestionId String? @unique
+  id                  String                   @id @default(cuid())
+  studentId           String
+  questionId          String
+  sessionId           String?
+  sessionQuestionId   String?                  @unique
   assessmentAttemptId String?
-  answer          String
-  isCorrect       Boolean
-  timeSpentSeconds Int
-  confidence      Float?
-  errorType       String?
-  status          String    @default("COMPLETED")
-  validatedAt     DateTime  @default(now())
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  question        Question  @relation(fields: [questionId], references: [id])
-  session         LearningSession? @relation(fields: [sessionId], references: [id])
-  sessionQuestion LearningSessionQuestion? @relation(fields: [sessionQuestionId], references: [id])
-  assessmentAttempt AssessmentAttempt? @relation(fields: [assessmentAttemptId], references: [id])
-  errorAnalysis   ErrorAnalysis?
-  masteryAudits   MasteryAudit[]
+  answer              String
+  isCorrect           Boolean
+  timeSpentSeconds    Int
+  confidence          Float?
+  errorType           String?
+  status              String                   @default("COMPLETED")
+  validatedAt         DateTime                 @default(now())
+  metadata            String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  instanceId          String?
+  errorAnalysis       ErrorAnalysis?
+  masteryAudits       MasteryAudit[]
+  instance            QuestionInstance?        @relation(fields: [instanceId], references: [id])
+  student             StudentProfile           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  question            Question                 @relation(fields: [questionId], references: [id])
+  session             LearningSession?         @relation(fields: [sessionId], references: [id])
+  sessionQuestion     LearningSessionQuestion? @relation(fields: [sessionQuestionId], references: [id])
+  assessmentAttempt   AssessmentAttempt?       @relation(fields: [assessmentAttemptId], references: [id])
 
   @@unique([id, sessionId])
   @@index([studentId])
@@ -185,72 +195,76 @@ model QuestionAttempt {
   @@index([createdAt])
   @@index([status])
   @@index([errorType])
+  @@index([instanceId])
 }
 
 model ErrorAnalysis {
-  id              String    @id @default(cuid())
-  attemptId       String    @unique
-  studentId       String
-  errorType       String
-  confidence      Float
-  hypothesis      String
-  relatedSkills   String?
-  validated       Boolean   @default(false)
+  id                   String          @id @default(cuid())
+  attemptId            String          @unique
+  studentId            String
+  errorPatternId       String?
+  errorType            String
+  confidence           Float
+  hypothesis           String
+  relatedSkills        String?
+  validated            Boolean         @default(false)
   validationQuestionId String?
-  validationResult Boolean?
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  attempt         QuestionAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  validationResult     Boolean?
+  metadata             String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  errorPattern         ErrorPattern?   @relation(fields: [errorPatternId], references: [id])
+  attempt              QuestionAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  student              StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
   @@index([attemptId])
+  @@index([errorPatternId])
   @@index([errorType])
   @@index([validated])
   @@index([createdAt])
 }
 
 model SkillMastery {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   studentId       String
   skillId         String
-  masteryLevel    Float     @default(0)
-  confidence      Float     @default(0)
-  attempts        Int       @default(0)
-  correctAttempts Int       @default(0)
+  microSkillId    String?
+  masteryLevel    Float          @default(0)
+  confidence      Float          @default(0)
+  attempts        Int            @default(0)
+  correctAttempts Int            @default(0)
   lastAttemptAt   DateTime?
   trend           String?
   nextReviewAt    DateTime?
-  evidenceCount   Int       @default(0)
-  version         Int       @default(1)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
+  evidenceCount   Int            @default(0)
+  version         Int            @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  microSkill      MicroSkill?    @relation(fields: [microSkillId], references: [id])
   student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, skillId])
   @@index([studentId])
   @@index([skillId])
+  @@index([microSkillId])
   @@index([masteryLevel])
   @@index([confidence])
   @@index([nextReviewAt])
 }
 
 model TopicMastery {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   studentId       String
   topicId         String
-  masteryLevel    Float     @default(0)
-  confidence      Float     @default(0)
-  attempts        Int       @default(0)
-  correctAttempts Int       @default(0)
+  masteryLevel    Float          @default(0)
+  confidence      Float          @default(0)
+  attempts        Int            @default(0)
+  correctAttempts Int            @default(0)
   lastAttemptAt   DateTime?
-  evidenceCount   Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
+  evidenceCount   Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, topicId])
@@ -260,42 +274,40 @@ model TopicMastery {
 }
 
 model LearningProgress {
-  id              String    @id @default(cuid())
-  studentId       String
-  skillId         String
-  date            DateTime  @default(now())
-  masteryLevel    Float
-  attemptsCount   Int
-  correctCount    Int
-  createdAt       DateTime  @default(now())
+  id            String         @id @default(cuid())
+  studentId     String
+  skillId       String
+  date          DateTime       @default(now())
+  masteryLevel  Float
+  attemptsCount Int
+  correctCount  Int
+  createdAt     DateTime       @default(now())
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
+  @@unique([studentId, skillId, date])
   @@index([studentId])
   @@index([skillId])
   @@index([date])
-  @@unique([studentId, skillId, date])
 }
 
 model Recommendation {
-  id              String    @id @default(cuid())
-  studentId       String
-  focusSkillId    String
-  focusSkillName  String
-  reason          String
+  id                   String         @id @default(cuid())
+  studentId            String
+  focusSkillId         String
+  focusSkillName       String
+  reason               String
   estimatedTimeMinutes Int
-  priority        Int       @default(3)
-  actionType      String    @default("PRACTICE")
-  status          String    @default("PENDING")
-  acceptedAt      DateTime?
-  completedAt     DateTime?
-  dismissedAt     DateTime?
-  expiresAt       DateTime?
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  priority             Int            @default(3)
+  actionType           String         @default("PRACTICE")
+  status               String         @default("PENDING")
+  acceptedAt           DateTime?
+  completedAt          DateTime?
+  dismissedAt          DateTime?
+  expiresAt            DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  metadata             String?
+  student              StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
   @@index([status])
@@ -304,23 +316,22 @@ model Recommendation {
 }
 
 model Assessment {
-  id              String    @id @default(cuid())
-  title           String
-  description     String?
-  type            String    @default("DIAGNOSTIC")
-  status          String    @default("DRAFT")
-  skillIds        String?
-  topicIds        String?
-  totalQuestions  Int       @default(0)
+  id               String               @id @default(cuid())
+  title            String
+  description      String?
+  type             String               @default("DIAGNOSTIC")
+  status           String               @default("DRAFT")
+  skillIds         String?
+  topicIds         String?
+  totalQuestions   Int                  @default(0)
   timeLimitMinutes Int?
-  passingScore    Float?
-  isActive        Boolean   @default(true)
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  questions       AssessmentQuestion[]
-  attempts        AssessmentAttempt[]
+  passingScore     Float?
+  isActive         Boolean              @default(true)
+  metadata         String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  attempts         AssessmentAttempt[]
+  questions        AssessmentQuestion[]
 
   @@index([type])
   @@index([status])
@@ -328,17 +339,16 @@ model Assessment {
 }
 
 model AssessmentQuestion {
-  id              String    @id @default(cuid())
-  assessmentId    String
-  questionId      String
-  order           Int
-  points          Int       @default(1)
-  difficulty      Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  question        Question  @relation(fields: [questionId], references: [id])
+  id           String     @id @default(cuid())
+  assessmentId String
+  questionId   String
+  order        Int
+  points       Int        @default(1)
+  difficulty   Int?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  question     Question   @relation(fields: [questionId], references: [id])
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@unique([assessmentId, questionId])
   @@index([assessmentId])
@@ -347,27 +357,26 @@ model AssessmentQuestion {
 }
 
 model AssessmentAttempt {
-  id              String    @id @default(cuid())
-  studentId       String
-  assessmentId    String
-  startedAt       DateTime  @default(now())
-  completedAt     DateTime?
-  status          String    @default("IN_PROGRESS")
-  score           Float?
-  maxScore        Float?
-  percentageScore Float?
-  timeSpentSeconds Int?
-  answers         String?
-  results         String?
-  metadata        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  assessment      Assessment @relation(fields: [assessmentId], references: [id])
-  questionAttempts QuestionAttempt[]
-  diagnosticResult DiagnosticResult?
+  id                String             @id @default(cuid())
+  studentId         String
+  assessmentId      String
+  startedAt         DateTime           @default(now())
+  completedAt       DateTime?
+  status            String             @default("IN_PROGRESS")
+  score             Float?
+  maxScore          Float?
+  percentageScore   Float?
+  timeSpentSeconds  Int?
+  answers           String?
+  results           String?
+  metadata          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  assessment        Assessment         @relation(fields: [assessmentId], references: [id])
+  student           StudentProfile     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   assessmentResults AssessmentResult[]
+  diagnosticResult  DiagnosticResult?
+  questionAttempts  QuestionAttempt[]
 
   @@unique([studentId, assessmentId])
   @@index([studentId])
@@ -378,22 +387,21 @@ model AssessmentAttempt {
 }
 
 model AssessmentResult {
-  id              String    @id @default(cuid())
+  id                  String            @id @default(cuid())
   assessmentAttemptId String
-  studentId       String
-  skillId         String
-  topicId         String?
-  score           Float
-  maxScore        Float
-  percentageScore Float
-  attempts        Int       @default(0)
-  correctAttempts Int       @default(0)
-  confidence      Float?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  attempt         AssessmentAttempt @relation(fields: [assessmentAttemptId], references: [id], onDelete: Cascade)
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId           String
+  skillId             String
+  topicId             String?
+  score               Float
+  maxScore            Float
+  percentageScore     Float
+  attempts            Int               @default(0)
+  correctAttempts     Int               @default(0)
+  confidence          Float?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  student             StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attempt             AssessmentAttempt @relation(fields: [assessmentAttemptId], references: [id], onDelete: Cascade)
 
   @@index([assessmentAttemptId])
   @@index([studentId])
@@ -402,36 +410,34 @@ model AssessmentResult {
 }
 
 model DiagnosticResult {
-  id              String    @id @default(cuid())
-  assessmentAttemptId String @unique
-  studentId       String
-  overallScore    Float
-  overallConfidence Float
-  summary         String?
-  skillResults    String?
-  topicResults    String?
-  recommendations String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  attempt         AssessmentAttempt @relation(fields: [assessmentAttemptId], references: [id], onDelete: Cascade)
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id                  String            @id @default(cuid())
+  assessmentAttemptId String            @unique
+  studentId           String
+  overallScore        Float
+  overallConfidence   Float
+  summary             String?
+  skillResults        String?
+  topicResults        String?
+  recommendations     String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  student             StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  attempt             AssessmentAttempt @relation(fields: [assessmentAttemptId], references: [id], onDelete: Cascade)
 
   @@index([assessmentAttemptId])
   @@index([studentId])
 }
 
 model RefreshToken {
-  id              String    @id @default(cuid())
-  userId          String
-  token           String    @unique
-  expiresAt       DateTime
-  revokedAt       DateTime?
+  id                String    @id @default(cuid())
+  userId            String
+  token             String    @unique
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   replacedByTokenId String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -439,17 +445,16 @@ model RefreshToken {
 }
 
 model Session {
-  id              String    @id @default(cuid())
-  userId          String
-  token           String    @unique
-  expiresAt       DateTime
-  lastActivityAt  DateTime  @default(now())
-  ipAddress       String?
-  userAgent       String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  userId         String
+  token          String   @unique
+  expiresAt      DateTime
+  lastActivityAt DateTime @default(now())
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -457,26 +462,21 @@ model Session {
 }
 
 model AuditLog {
-  id              String    @id @default(cuid())
-  userId          String?
-  action          String
-  entityType      String
-  entityId        String?
-  details         String?
-  ipAddress       String?
-  userAgent       String?
-  createdAt       DateTime  @default(now())
-
-  user            User?     @relation(fields: [userId], references: [id])
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([action])
   @@index([createdAt])
 }
-
-// ============================================
-// NEW MODELS FOR PHASE 1A.1
-// ============================================
 
 model IdempotencyRecord {
   id          String    @id @default(cuid())
@@ -490,7 +490,6 @@ model IdempotencyRecord {
   createdAt   DateTime  @default(now())
   expiresAt   DateTime
   completedAt DateTime?
-
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, operation, key])
@@ -521,7 +520,7 @@ model OutboxEvent {
 }
 
 model MasteryAudit {
-  id              String    @id @default(cuid())
+  id              String           @id @default(cuid())
   studentId       String
   skillId         String
   attemptId       String?
@@ -529,14 +528,277 @@ model MasteryAudit {
   newMastery      Float
   reason          String
   source          String
-  correlationId  String?
-  createdAt       DateTime  @default(now())
-
-  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Restrict)
-  attempt         QuestionAttempt? @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+  correlationId   String?
+  createdAt       DateTime         @default(now())
+  attempt         QuestionAttempt? @relation(fields: [attemptId], references: [id])
+  student         StudentProfile   @relation(fields: [studentId], references: [id])
 
   @@index([studentId, skillId])
   @@index([createdAt])
   @@index([source])
   @@index([correlationId])
+}
+
+model CurriculumVersion {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  name           String
+  grade          Int
+  subject        String
+  version        String
+  source         String
+  sourceDocument String?
+  updateDate     DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  themes         Theme[]
+
+  @@index([grade])
+  @@index([subject])
+  @@index([isActive])
+}
+
+model Theme {
+  id                  String            @id @default(cuid())
+  curriculumVersionId String
+  officialCode        String
+  name                String
+  lessonHours         Int
+  sourceOrder         Int
+  sourceTheme         String?
+  sourceDocument      String?
+  sourcePage          String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  learningOutcomes    LearningOutcome[]
+  curriculumVersion   CurriculumVersion @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([curriculumVersionId, officialCode])
+  @@index([curriculumVersionId])
+  @@index([officialCode])
+  @@index([sourceOrder])
+}
+
+model LearningOutcome {
+  id                String             @id @default(cuid())
+  themeId           String
+  officialCode      String
+  officialText      String
+  sourceOrder       Int
+  sourceDocument    String?
+  sourcePage        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  theme             Theme              @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  processComponents ProcessComponent[]
+
+  @@unique([themeId, officialCode])
+  @@index([themeId])
+  @@index([officialCode])
+  @@index([sourceOrder])
+}
+
+model ProcessComponent {
+  id                String          @id @default(cuid())
+  learningOutcomeId String
+  officialCode      String
+  officialText      String
+  sourceOrder       Int
+  sourceDocument    String?
+  sourcePage        String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  microSkills       MicroSkill[]
+  learningOutcome   LearningOutcome @relation(fields: [learningOutcomeId], references: [id], onDelete: Cascade)
+
+  @@unique([learningOutcomeId, officialCode])
+  @@index([learningOutcomeId])
+  @@index([officialCode])
+  @@index([sourceOrder])
+}
+
+model MicroSkill {
+  id                 String                   @id @default(cuid())
+  processComponentId String
+  code               String                   @unique
+  name               String
+  description        String
+  category           String?
+  difficulty         String?
+  source             String
+  confidence         Float?
+  reviewed           Boolean                  @default(false)
+  reviewerId         String?
+  version            Int                      @default(1)
+  isActive           Boolean                  @default(true)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  errorMappings      ErrorPatternMicroSkill[]
+  processComponent   ProcessComponent         @relation(fields: [processComponentId], references: [id], onDelete: Cascade)
+  questionMappings   QuestionSkillMapping[]
+  skillMasteries     SkillMastery[]
+
+  @@index([processComponentId])
+  @@index([code])
+  @@index([category])
+  @@index([difficulty])
+  @@index([source])
+  @@index([isActive])
+}
+
+model ErrorPattern {
+  id                 String                   @id @default(cuid())
+  code               String                   @unique
+  name               String
+  description        String
+  category           String
+  severity           String
+  commonWrongAnswers String?
+  source             String
+  confidence         Float?
+  reviewed           Boolean                  @default(false)
+  reviewerId         String?
+  isActive           Boolean                  @default(true)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  errorAnalyses      ErrorAnalysis[]
+  microSkills        ErrorPatternMicroSkill[]
+
+  @@index([code])
+  @@index([category])
+  @@index([severity])
+  @@index([source])
+  @@index([isActive])
+}
+
+model ErrorPatternMicroSkill {
+  errorPatternId String
+  microSkillId   String
+  relevance      Float
+  isPrimary      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  microSkill     MicroSkill   @relation(fields: [microSkillId], references: [id], onDelete: Cascade)
+  errorPattern   ErrorPattern @relation(fields: [errorPatternId], references: [id], onDelete: Cascade)
+
+  @@id([errorPatternId, microSkillId])
+  @@index([microSkillId])
+}
+
+model QuestionSkillMapping {
+  id            String     @id @default(cuid())
+  questionId    String
+  microSkillId  String
+  relevance     Float
+  isPrimary     Boolean    @default(false)
+  aiConfidence  Float?
+  mappingSource String
+  reviewed      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  microSkill    MicroSkill @relation(fields: [microSkillId], references: [id], onDelete: Cascade)
+  question      Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, microSkillId])
+  @@index([questionId])
+  @@index([microSkillId])
+  @@index([isPrimary])
+  @@index([mappingSource])
+}
+
+model QuestionSource {
+  id             String              @id @default(cuid())
+  code           String              @unique
+  name           String
+  origin         String
+  trustCeiling   String
+  license        String?
+  sourceDocument String?
+  externalRef    String?
+  isActive       Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  questions      Question[]
+  ingestions     QuestionIngestion[]
+
+  @@index([origin])
+  @@index([isActive])
+}
+
+model QuestionIngestion {
+  id                     String             @id @default(cuid())
+  sourceId               String?
+  ingestedByUserId       String?
+  ingestMethod           String
+  originalAssetRef       String?
+  originalAssetMimeType  String?
+  originalAssetSizeBytes Int?
+  rawExtractedText       String?
+  ocrConfidence          Float?
+  extractionFailed       Boolean            @default(false)
+  extractionErrorMessage String?
+  normalizedText         String?
+  normalizedExpression   String?
+  parsingConfidence      Float?
+  state                  String             @default("INGESTED")
+  requiresReview         Boolean            @default(true)
+  reviewNotes            String?
+  resultingQuestionId    String?            @unique
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  resultingQuestion      Question?          @relation("QuestionIngestionResult", fields: [resultingQuestionId], references: [id])
+  source                 QuestionSource?    @relation(fields: [sourceId], references: [id])
+  instances              QuestionInstance[]
+
+  @@index([state])
+  @@index([ingestedByUserId])
+  @@index([sourceId])
+  @@index([requiresReview])
+  @@index([createdAt])
+}
+
+model QuestionInstance {
+  id            String             @id @default(cuid())
+  questionId    String
+  ingestionId   String?
+  studentId     String?
+  assetRef      String?
+  assetMimeType String?
+  assetHash     String?
+  uploadedAt    DateTime           @default(now())
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  attempts      QuestionAttempt[]
+  student       StudentProfile?    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  ingestion     QuestionIngestion? @relation(fields: [ingestionId], references: [id])
+  question      Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@index([studentId])
+  @@index([ingestionId])
+  @@index([assetHash])
+  @@index([uploadedAt])
+}
+
+model CurriculumCandidate {
+  id               String   @id @default(cuid())
+  questionId       String
+  level            String
+  targetId         String
+  confidence       Float
+  decision         String   @default("PENDING")
+  method           String
+  rationale        String?
+  reviewed         Boolean  @default(false)
+  reviewedByUserId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, level, targetId])
+  @@index([questionId])
+  @@index([level, targetId])
+  @@index([decision])
+  @@index([confidence])
+  @@index([reviewed])
 }

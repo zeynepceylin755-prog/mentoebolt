@@ -1,6 +1,10 @@
+// Production entry point.
+// Validates production configuration and starts the real application
+// bootstrap (see src/index.ts).
+
 import { bootstrap } from './index.js';
-import { prodConfig, validateProdConfig } from '../config/production.js';
-import { logger } from './infrastructure/observability/logging/Logger.js';
+import { prodConfig, validateProdConfig } from './infrastructure/config/production.js';
+import { logger } from './infrastructure/logging/logger.js';
 
 async function startProduction() {
   try {
@@ -10,7 +14,7 @@ async function startProduction() {
 
     // Bootstrap application
     const app = await bootstrap();
-    
+
     // Start server
     const server = app.listen(prodConfig.app.port, prodConfig.app.host, () => {
       logger.info({
@@ -25,15 +29,15 @@ async function startProduction() {
     // Graceful shutdown
     const shutdown = async (signal: string) => {
       logger.info({ signal }, 'Received shutdown signal');
-      
+
       // Close server
       server.close(async () => {
         logger.info('Server closed');
-        
+
         // Close database connections
         // Close Redis connections
         // Close queue connections
-        
+
         process.exit(0);
       });
 
@@ -53,7 +57,7 @@ async function startProduction() {
         event: 'uncaught_exception',
         error,
       }, 'Uncaught exception');
-      
+
       // Graceful shutdown on critical errors
       shutdown('uncaughtException');
     });

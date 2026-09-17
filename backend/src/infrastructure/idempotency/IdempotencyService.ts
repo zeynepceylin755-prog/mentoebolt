@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { createHash } from 'crypto';
+import { ConflictError } from '../../domain/errors/ConflictError.js';
 
 export class IdempotencyService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -47,19 +48,25 @@ export class IdempotencyService {
           });
 
           if (!idempotencyRecord) {
-            throw new Error('Idempotency record disappeared after unique constraint violation');
+            throw new ConflictError('Idempotency record disappeared after unique constraint violation');
           }
 
-          // Handle existing record based on its state
-          if (idempotencyRecord.requestHash !== requestHash) {
-            throw new Error('Idempotency conflict: different request payload for same key');
-          }
-
+          // Handle existing record based on its state.
+          // Status is evaluated before the payload hash because:
+          //  - a PROCESSING record means the original request is still in
+          //    flight and must not be executed twice, and
+          //  - a FAILED record is retryable regardless of the stored hash.
           if (idempotencyRecord.status === 'PROCESSING') {
-            throw new Error('Operation already in progress');
+            throw new ConflictError('Operation already in progress');
           }
 
           if (idempotencyRecord.status === 'COMPLETED') {
+            if (idempotencyRecord.requestHash !== requestHash) {
+              throw new ConflictError('Idempotency conflict: different request payload for same key');
+            }
+            if (!idempotencyRecord.response) {
+              throw new ConflictError('Idempotency conflict: completed record has no stored response');
+            }
             return JSON.parse(idempotencyRecord.response as string) as T;
           }
 

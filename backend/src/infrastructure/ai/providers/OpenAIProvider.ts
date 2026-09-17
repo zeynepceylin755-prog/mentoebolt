@@ -28,7 +28,9 @@ export class OpenAIProvider implements IAIProvider {
   }
 
   getVersion(): string {
-    return '2024-02-15';
+    // Phase 5F.9-C: truthful provider/model metadata. The previous hardcoded
+    // '2024-02-15' invented a model version that was never the configured model.
+    return this.model;
   }
 
   async isAvailable(): Promise<boolean> {
@@ -83,7 +85,12 @@ export class OpenAIProvider implements IAIProvider {
         structured,
       };
     } catch (error) {
-      logger.error({ error, response: response.content }, 'Failed to parse structured AI response');
+      // Phase 6.7 (privacy): never log the raw model output — it can contain
+      // student content and/or internal reasoning. Log only safe metadata.
+      logger.error(
+        { error, contentLength: typeof response.content === 'string' ? response.content.length : 0 },
+        'Failed to parse structured AI response'
+      );
       throw new Error('Invalid structured response from AI');
     }
   }

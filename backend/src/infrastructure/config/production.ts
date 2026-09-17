@@ -1,4 +1,4 @@
-import { getEnv } from '../src/infrastructure/config/environment.js';
+import { getEnv } from './environment.js';
 
 export const prodConfig = {
   app: {
