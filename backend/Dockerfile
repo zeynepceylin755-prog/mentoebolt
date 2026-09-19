@@ -34,4 +34,4 @@ USER nodejs
 EXPOSE 3000
 EXPOSE 9090
 
-CMD ["node", "dist/production.js"]
+CMD ["node", "dist/src/production.js"]
