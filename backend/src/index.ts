@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { pinoHttp } from 'pino-http';
 import { PrismaClient } from '@prisma/client';
 
@@ -432,68 +432,70 @@ function resolveUploadDir(configured?: string): string {
   return path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
 }
 
-export function shouldAutoStartServer(): boolean {
-  if (process.env.NODE_ENV === 'test') {
+export function isDirectExecution(): boolean {
+  const entryArg = process.argv[1];
+  if (!entryArg) {
     return false;
   }
 
-  const entryScript = process.argv[1];
-  if (!entryScript) {
+  try {
+    return import.meta.url === pathToFileURL(entryArg).href;
+  } catch {
     return false;
   }
+}
 
-  return fileURLToPath(import.meta.url) === entryScript;
+export async function startServer(): Promise<void> {
+  const env = getEnv();
+  const port = Number(env.PORT);
+
+  const app = await bootstrap();
+  const server = app.listen(port, () => {
+    logger.info(`🚀 MENTORA Backend running on port ${port} in ${env.NODE_ENV} mode`);
+  });
+
+  // Phase 7.3 — bounded, idempotent graceful shutdown.
+  //  1. stop accepting new connections,
+  //  2. let in-flight requests finish,
+  //  3. close the database,
+  //  4. exit cleanly — or force-exit after a hard bound so a stuck request can
+  //     never block termination indefinitely.
+  const SHUTDOWN_TIMEOUT_MS = 30000;
+  let shuttingDown = false;
+
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+    logger.info({ signal }, 'Shutting down gracefully...');
+
+    const forceExit = setTimeout(() => {
+      logger.error('Graceful shutdown timed out; forcing exit');
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref?.();
+
+    server.close(async () => {
+      try {
+        await prisma.$disconnect();
+      } catch (error) {
+        logger.error({ error }, 'Error while closing database connections');
+      }
+      logger.info('Server closed');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 // Only start the server when this file is executed directly. This keeps the
 // shared bootstrap API available to tests and the production entrypoint without
 // creating a second listener on the same port.
-if (shouldAutoStartServer()) {
-  const env = getEnv();
-  const port = Number(env.PORT);
-
-  bootstrap().then((app) => {
-    const server = app.listen(port, () => {
-      logger.info(`🚀 MENTORA Backend running on port ${port} in ${env.NODE_ENV} mode`);
-    });
-
-    // Phase 7.3 — bounded, idempotent graceful shutdown.
-    //  1. stop accepting new connections,
-    //  2. let in-flight requests finish,
-    //  3. close the database,
-    //  4. exit cleanly — or force-exit after a hard bound so a stuck request can
-    //     never block termination indefinitely.
-    const SHUTDOWN_TIMEOUT_MS = 30000;
-    let shuttingDown = false;
-
-    const shutdown = async (signal: string) => {
-      if (shuttingDown) {
-        return;
-      }
-      shuttingDown = true;
-      logger.info({ signal }, 'Shutting down gracefully...');
-
-      const forceExit = setTimeout(() => {
-        logger.error('Graceful shutdown timed out; forcing exit');
-        process.exit(1);
-      }, SHUTDOWN_TIMEOUT_MS);
-      // Do not keep the event loop alive just for the timer.
-      forceExit.unref?.();
-
-      server.close(async () => {
-        try {
-          await prisma.$disconnect();
-        } catch (error) {
-          logger.error({ error }, 'Error while closing database connections');
-        }
-        logger.info('Server closed');
-        process.exit(0);
-      });
-    };
-
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
-    process.on('SIGINT', () => shutdown('SIGINT'));
-  }).catch(async (error) => {
+if (isDirectExecution()) {
+  startServer().catch(async (error) => {
     logger.error({ error }, 'Failed to start application');
     await prisma.$disconnect();
     process.exit(1);

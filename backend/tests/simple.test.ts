@@ -1,7 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { shouldAutoStartServer } from '../src/index.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('Simple Test', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it('should pass basic test', () => {
     expect(true).toBe(true);
   });
@@ -17,18 +20,18 @@ describe('Simple Test', () => {
     expect(greeting.length).toBeGreaterThan(0);
   });
 
-  it('should not auto-start in production when imported as a module', () => {
-    const previousNodeEnv = process.env.NODE_ENV;
+  it('should not start a server when imported as a module', async () => {
+    const http = await import('node:http');
+    const listenSpy = vi.spyOn(http.Server.prototype, 'listen');
     const previousArgv1 = process.argv[1];
-
-    process.env.NODE_ENV = 'production';
     process.argv[1] = '/tmp/not-the-server-entry.js';
 
     try {
-      expect(shouldAutoStartServer()).toBe(false);
+      await import('../src/index.js');
+      expect(listenSpy).not.toHaveBeenCalled();
     } finally {
-      process.env.NODE_ENV = previousNodeEnv;
       process.argv[1] = previousArgv1;
+      listenSpy.mockRestore();
     }
   });
 });
