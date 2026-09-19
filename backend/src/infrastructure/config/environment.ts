@@ -105,37 +105,33 @@ const envSchema = z.object({
 
 export type Environment = z.infer<typeof envSchema>;
 
-let cachedEnv: Environment | null = null;
-
 export function getEnv(): Environment {
-  if (cachedEnv) return cachedEnv;
-
   try {
-    cachedEnv = envSchema.parse(process.env);
+    const env = envSchema.parse(process.env);
     // Phase 7.3: fail CLOSED in production. The zod schema above applies
     // convenient DEVELOPMENT defaults (including well-known placeholder JWT
     // secrets); those must never survive into a real deployment. This throws
     // with a name-only, secret-free message when production config is unsafe.
     assertProductionConfig(
       {
-        NODE_ENV: cachedEnv.NODE_ENV,
-        JWT_SECRET: cachedEnv.JWT_SECRET,
-        JWT_REFRESH_SECRET: cachedEnv.JWT_REFRESH_SECRET,
-        DATABASE_URL: cachedEnv.DATABASE_URL,
+        NODE_ENV: env.NODE_ENV,
+        JWT_SECRET: env.JWT_SECRET,
+        JWT_REFRESH_SECRET: env.JWT_REFRESH_SECRET,
+        DATABASE_URL: env.DATABASE_URL,
         // Prefer the production plural variable; fall back to the singular one.
         CORS_ORIGIN:
-          cachedEnv.CORS_ORIGINS && cachedEnv.CORS_ORIGINS.trim().length > 0
-            ? cachedEnv.CORS_ORIGINS
-            : cachedEnv.CORS_ORIGIN,
-        OCR_PROVIDER: cachedEnv.OCR_PROVIDER,
-        QUESTION_UNDERSTANDING_PROVIDER: cachedEnv.QUESTION_UNDERSTANDING_PROVIDER,
-        ERROR_ANALYSIS_PROVIDER: cachedEnv.ERROR_ANALYSIS_PROVIDER,
-        EXPLANATION_PROVIDER: cachedEnv.EXPLANATION_PROVIDER,
-        OPENAI_API_KEY: cachedEnv.OPENAI_API_KEY,
+          env.CORS_ORIGINS && env.CORS_ORIGINS.trim().length > 0
+            ? env.CORS_ORIGINS
+            : env.CORS_ORIGIN,
+        OCR_PROVIDER: env.OCR_PROVIDER,
+        QUESTION_UNDERSTANDING_PROVIDER: env.QUESTION_UNDERSTANDING_PROVIDER,
+        ERROR_ANALYSIS_PROVIDER: env.ERROR_ANALYSIS_PROVIDER,
+        EXPLANATION_PROVIDER: env.EXPLANATION_PROVIDER,
+        OPENAI_API_KEY: env.OPENAI_API_KEY,
       },
       process.env
     );
-    return cachedEnv;
+    return env;
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors = error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join('\n');
