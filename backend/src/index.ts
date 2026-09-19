@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { pinoHttp } from 'pino-http';
 import { PrismaClient } from '@prisma/client';
 
@@ -431,8 +432,23 @@ function resolveUploadDir(configured?: string): string {
   return path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
 }
 
-// Only start the server outside of tests
-if (process.env.NODE_ENV !== 'test') {
+export function shouldAutoStartServer(): boolean {
+  if (process.env.NODE_ENV === 'test') {
+    return false;
+  }
+
+  const entryScript = process.argv[1];
+  if (!entryScript) {
+    return false;
+  }
+
+  return fileURLToPath(import.meta.url) === entryScript;
+}
+
+// Only start the server when this file is executed directly. This keeps the
+// shared bootstrap API available to tests and the production entrypoint without
+// creating a second listener on the same port.
+if (shouldAutoStartServer()) {
   const env = getEnv();
   const port = Number(env.PORT);
 
