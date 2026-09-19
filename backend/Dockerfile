@@ -14,19 +14,22 @@ RUN apt-get update && \
 COPY package*.json ./
 RUN npm ci
 
-# Copy the complete backend source
+# Copy the complete backend source first so the production-specific Prisma
+# replacement happens after the final source tree is in place.
 COPY . .
 
-# Production uses the dedicated PostgreSQL Prisma schema.
-RUN npx prisma generate --schema prisma/schema.postgresql.prisma
+# Replace the SQLite development schema with the PostgreSQL schema for the final
+# production image only. The repository's SQLite schema remains untouched.
+RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma
 
-# IMPORTANT:
-# Prisma 5.22 uses prisma/migrations as the migration directory.
-# Replace it only inside the Docker image.
-#
-# The repository's original SQLite migrations remain untouched.
-RUN rm -rf ./prisma/migrations && \
-    cp -R ./prisma/migrations-postgresql ./prisma/migrations
+# Prisma 5.22.x uses prisma/migrations as the migration directory. Replace the
+# SQLite history inside this build image with the dedicated PostgreSQL lineage
+# only after the entire source tree has been copied.
+RUN rm -rf prisma/migrations && \
+    cp -R prisma/migrations-postgresql prisma/migrations
+
+# Generate Prisma client for the PostgreSQL production schema.
+RUN npx prisma generate --schema prisma/schema.prisma
 
 # Build the application
 RUN npm run build
