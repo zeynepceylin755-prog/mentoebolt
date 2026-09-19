@@ -56,6 +56,26 @@ interface AgentRequirement {
  * the configuration is acceptable). Pure and side-effect free so it is directly
  * testable without touching process state.
  */
+function isPlaceholderPostgresUrl(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized === 'postgresql://user:password@host:5432/mentora' ||
+    normalized === 'postgres://user:password@host:5432/mentora' ||
+    normalized.includes('user:password@host') ||
+    normalized.includes('change_me') ||
+    normalized.includes('replace_with_secure_password')
+  );
+}
+
+function isPostgresUrl(value: string): boolean {
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  return /^(postgresql|postgres):\/\//i.test(normalized);
+}
+
 export function collectProductionConfigProblems(
   input: ProductionValidationInput,
   envRaw: Record<string, string | undefined> = {}
@@ -80,9 +100,17 @@ export function collectProductionConfigProblems(
   const dbUrl = input.DATABASE_URL ?? '';
   if (!dbUrl || dbUrl.trim().length === 0) {
     problems.push('DATABASE_URL must be configured explicitly in production');
-  } else if (dbUrl.startsWith('file:')) {
-    // A file-based SQLite database is not a production deployment target.
-    problems.push('DATABASE_URL must point at a production database, not a file: SQLite URL');
+  } else {
+    if (dbUrl.startsWith('file:')) {
+      // A file-based SQLite database is not a production deployment target.
+      problems.push('DATABASE_URL must point at a production database, not a file: SQLite URL');
+    }
+    if (!isPostgresUrl(dbUrl)) {
+      problems.push('DATABASE_URL must use a PostgreSQL connection string in production');
+    }
+    if (isPlaceholderPostgresUrl(dbUrl)) {
+      problems.push('DATABASE_URL must not be a placeholder production value');
+    }
   }
 
   // --- CORS --------------------------------------------------------------
