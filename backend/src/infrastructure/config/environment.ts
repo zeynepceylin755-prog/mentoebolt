@@ -32,6 +32,7 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   EMAIL_PROVIDER: z.string().default('mock'),
   EMAIL_FROM: z.string().email().default('noreply@mentora.ai'),
+  FRONTEND_URL: z.string().optional(),
   // Phase 5F.8 (C): upload storage. The directory is configurable and used only
   // by the local development storage provider. Files are never stored in Prisma.
   UPLOAD_DIR: z.string().default('uploads'),

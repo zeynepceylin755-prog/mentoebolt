@@ -331,6 +331,25 @@ describe('Phase 6.7 — Security / Identity / Idempotency Hardening', () => {
         .send({ questionId: question.id, answer: '42', timeSpentSeconds: 5 });
       expect([403, 404]).toContain(res.status);
     });
+
+    it('14a. a non-existent question is indistinguishable from an unavailable question', async () => {
+      const app = await getApp();
+      const alice = await createStudent('p67-missing-question');
+
+      const res = await request(app)
+        .post('/api/v1/question-attempts')
+        .set('Authorization', `Bearer ${alice.accessToken}`)
+        .send({ questionId: 'question-does-not-exist', answer: '42', timeSpentSeconds: 5 });
+
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual({
+        success: false,
+        error: {
+          code: 'AUTHORIZATION_ERROR',
+          message: 'Question is not available to this student',
+        },
+      });
+    });
   });
 
   // ===================================================================== Mastery

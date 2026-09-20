@@ -397,3 +397,26 @@ export function reviewSkillMapping(
     body,
   });
 }
+
+// ---------------------------------------------------------- student profile
+
+export interface StudentProfile {
+  id: string;
+  userId: string;
+  grade: number;
+  school?: string;
+  learningStage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function getMyProfile(): Promise<StudentProfile> {
+  return apiRequest<StudentProfile>('/students/me');
+}
+
+export function updateStudentGrade(studentId: string, grade: number): Promise<StudentProfile> {
+  return apiRequest<StudentProfile>(`/students/${studentId}/grade`, {
+    method: 'PUT',
+    body: { grade },
+  });
+}

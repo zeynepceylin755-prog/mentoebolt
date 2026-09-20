@@ -16,100 +16,142 @@ export class IdempotencyService {
     // Generate request hash for payload comparison
     const requestHash = this.generateHash(requestPayload);
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+    let duplicateClaim = false;
 
-    // Execute entire operation in a single transaction for atomic consistency
-    return this.prisma.$transaction(async (tx) => {
-      // Attempt atomic claim with unique constraint violation handling
-      let idempotencyRecord;
-      try {
-        // Try to create the idempotency record atomically
-        idempotencyRecord = await tx.idempotencyRecord.create({
-          data: {
-            userId,
-            operation,
-            key,
-            requestHash,
-            status: 'PROCESSING',
-            expiresAt,
-          },
-        });
-      } catch (error) {
-        // Check if this is a unique constraint violation
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-          // Another request already claimed this key - fetch the existing record
-          idempotencyRecord = await tx.idempotencyRecord.findUnique({
-            where: {
-              userId_operation_key: {
-                userId,
-                operation,
-                key,
-              },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        try {
+          await tx.idempotencyRecord.create({
+            data: {
+              userId,
+              operation,
+              key,
+              requestHash,
+              status: 'PROCESSING',
+              expiresAt,
             },
           });
-
-          if (!idempotencyRecord) {
-            throw new ConflictError('Idempotency record disappeared after unique constraint violation');
+        } catch (error) {
+          if (this.isUniqueConstraintError(error)) {
+            duplicateClaim = true;
           }
-
-          // Handle existing record based on its state.
-          // Status is evaluated before the payload hash because:
-          //  - a PROCESSING record means the original request is still in
-          //    flight and must not be executed twice, and
-          //  - a FAILED record is retryable regardless of the stored hash.
-          if (idempotencyRecord.status === 'PROCESSING') {
-            throw new ConflictError('Operation already in progress');
-          }
-
-          if (idempotencyRecord.status === 'COMPLETED') {
-            if (idempotencyRecord.requestHash !== requestHash) {
-              throw new ConflictError('Idempotency conflict: different request payload for same key');
-            }
-            if (!idempotencyRecord.response) {
-              throw new ConflictError('Idempotency conflict: completed record has no stored response');
-            }
-            return JSON.parse(idempotencyRecord.response as string) as T;
-          }
-
-          // If FAILED, allow retry by updating to PROCESSING
-          if (idempotencyRecord.status === 'FAILED') {
-            idempotencyRecord = await tx.idempotencyRecord.update({
-              where: { id: idempotencyRecord.id },
-              data: {
-                status: 'PROCESSING',
-                requestHash,
-                completedAt: null,
-              },
-            });
-          }
-        } else {
-          // Re-throw non-uniqueness errors
           throw error;
         }
+
+        return this.executeClaimed(tx, userId, operation, key, callback);
+      });
+    } catch (error) {
+      if (!duplicateClaim || !this.isUniqueConstraintError(error)) {
+        throw error;
       }
 
-      // Execute the business operation using the same transaction context
-      // This ensures business state and idempotency state share atomic consistency
-      const result = await callback(tx);
+      // PostgreSQL aborts the transaction after P2002. Resolve the duplicate
+      // using a new Prisma operation, outside that aborted transaction.
+      return this.resolveDuplicate(
+        userId,
+        operation,
+        key,
+        requestHash,
+        callback,
+        expiresAt
+      );
+    }
+  }
 
-      // Store successful result in the same transaction
-      await tx.idempotencyRecord.update({
-        where: {
-          userId_operation_key: {
-            userId,
-            operation,
-            key,
-          },
-        },
-        data: {
-          status: 'COMPLETED',
-          response: JSON.stringify(result),
-          statusCode: 200,
-          completedAt: new Date(),
-        },
+  private async resolveDuplicate<T>(
+    userId: string,
+    operation: string,
+    key: string,
+    requestHash: string,
+    callback: (tx: any) => Promise<T>,
+    expiresAt: Date
+  ): Promise<T> {
+    const record = await this.prisma.idempotencyRecord.findUnique({
+      where: { userId_operation_key: { userId, operation, key } },
+    });
+
+    if (!record) {
+      throw new ConflictError('Idempotency record disappeared after unique constraint violation');
+    }
+    if (record.status === 'PROCESSING') {
+      throw new ConflictError('Operation already in progress');
+    }
+    if (record.status === 'COMPLETED') {
+      return this.replayCompleted(record, requestHash);
+    }
+    if (record.status === 'FAILED') {
+      return this.retryFailed(record.id, userId, operation, key, requestHash, callback, expiresAt);
+    }
+
+    throw new ConflictError('Unknown idempotency record state');
+  }
+
+  private async retryFailed<T>(
+    id: string,
+    userId: string,
+    operation: string,
+    key: string,
+    requestHash: string,
+    callback: (tx: any) => Promise<T>,
+    expiresAt: Date
+  ): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.idempotencyRecord.updateMany({
+        where: { id, status: 'FAILED' },
+        data: { status: 'PROCESSING', requestHash, expiresAt, completedAt: null },
       });
 
-      return result;
+      if (claimed.count === 0) {
+        const current = await tx.idempotencyRecord.findUnique({ where: { id } });
+        if (current?.status === 'COMPLETED') {
+          return this.replayCompleted(current, requestHash);
+        }
+        throw new ConflictError('Operation already in progress');
+      }
+
+      return this.executeClaimed(tx, userId, operation, key, callback);
     });
+  }
+
+  private async executeClaimed<T>(
+    tx: any,
+    userId: string,
+    operation: string,
+    key: string,
+    callback: (tx: any) => Promise<T>
+  ): Promise<T> {
+    const result = await callback(tx);
+
+    await tx.idempotencyRecord.update({
+      where: { userId_operation_key: { userId, operation, key } },
+      data: {
+        status: 'COMPLETED',
+        response: JSON.stringify(result),
+        statusCode: 200,
+        completedAt: new Date(),
+      },
+    });
+
+    return result;
+  }
+
+  private replayCompleted<T>(
+    record: { requestHash: string; response: string | null },
+    requestHash: string
+  ): T {
+    if (record.requestHash !== requestHash) {
+      throw new ConflictError('Idempotency conflict: different request payload for same key');
+    }
+    if (!record.response) {
+      throw new ConflictError('Idempotency conflict: completed record has no stored response');
+    }
+    return JSON.parse(record.response) as T;
+  }
+
+  private isUniqueConstraintError(
+    error: unknown
+  ): error is Prisma.PrismaClientKnownRequestError {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
   }
 
   private generateHash(payload: any): string {

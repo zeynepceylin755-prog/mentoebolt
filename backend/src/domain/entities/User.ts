@@ -12,6 +12,10 @@ export interface UserProps {
   loginAttempts?: number;
   lockedUntil?: Date;
   deletedAt?: Date;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -27,6 +31,10 @@ export class User {
   public readonly loginAttempts: number;
   public readonly lockedUntil?: Date;
   public readonly deletedAt?: Date;
+  public readonly resetToken?: string;
+  public readonly resetTokenExpiry?: Date;
+  public readonly verificationToken?: string;
+  public readonly verificationTokenExpiry?: Date;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -41,6 +49,10 @@ export class User {
     this.loginAttempts = props.loginAttempts || 0;
     this.lockedUntil = props.lockedUntil;
     this.deletedAt = props.deletedAt;
+    this.resetToken = props.resetToken;
+    this.resetTokenExpiry = props.resetTokenExpiry;
+    this.verificationToken = props.verificationToken;
+    this.verificationTokenExpiry = props.verificationTokenExpiry;
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();
   }

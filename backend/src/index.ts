@@ -66,6 +66,9 @@ import { AssetUploadService } from './application/services/ingestion/AssetUpload
 // Idempotency
 import { IdempotencyService } from './infrastructure/idempotency/IdempotencyService.js';
 
+// Email provider
+import { createEmailProvider } from './infrastructure/email/EmailProvider.js';
+
 // Controllers
 import { AuthController } from './api/controllers/AuthController.js';
 import { StudentController } from './api/controllers/StudentController.js';
@@ -262,13 +265,15 @@ export async function bootstrap() {
   const idempotencyService = new IdempotencyService(prisma);
 
   // Application services
+  const emailProvider = createEmailProvider();
   const authService = new AuthService(
     userRepository,
     studentRepository,
     refreshTokenRepository,
     sessionRepository,
     tokenService,
-    passwordService
+    passwordService,
+    emailProvider
   );
   const studentService = new StudentService(studentRepository, userRepository);
   const learningSessionService = new LearningSessionService(prisma, studentRepository);

@@ -124,7 +124,7 @@ describe('Phase 6.2 — Authentication Integration', () => {
           grade: 11,
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
     });
 

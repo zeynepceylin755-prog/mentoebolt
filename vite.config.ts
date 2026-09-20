@@ -13,4 +13,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  define: {
+    // In development, use the environment variable. In production, let the
+    // runtime fall back to same-origin /api/v1 for reverse proxy deployment.
+    __MENTORA_API_BASE__: JSON.stringify(
+      process.env.NODE_ENV === 'development'
+        ? process.env.VITE_API_BASE_URL
+        : undefined
+    ),
+  },
 });

@@ -22,6 +22,30 @@ export class InMemoryUserRepository implements IUserRepository {
     return null;
   }
 
+  async findByResetToken(token: string): Promise<User | null> {
+    for (const user of this.users.values()) {
+      const userWithReset = user as any;
+      if (userWithReset.resetToken === token &&
+          userWithReset.resetTokenExpiry &&
+          userWithReset.resetTokenExpiry > new Date()) {
+        return user;
+      }
+    }
+    return null;
+  }
+
+  async findByVerificationToken(token: string): Promise<User | null> {
+    for (const user of this.users.values()) {
+      const userWithVerify = user as any;
+      if (userWithVerify.verificationToken === token &&
+          userWithVerify.verificationTokenExpiry &&
+          userWithVerify.verificationTokenExpiry > new Date()) {
+        return user;
+      }
+    }
+    return null;
+  }
+
   async findAll(limit: number, offset: number): Promise<User[]> {
     const all = Array.from(this.users.values());
     return all.slice(offset, offset + limit);
@@ -55,6 +79,10 @@ export class InMemoryUserRepository implements IUserRepository {
       emailVerified: data.emailVerified !== undefined ? data.emailVerified : existing.emailVerified,
       loginAttempts: data.loginAttempts !== undefined ? data.loginAttempts : (existing as any).loginAttempts || 0,
       lockedUntil: data.lockedUntil !== undefined ? data.lockedUntil : (existing as any).lockedUntil,
+      resetToken: data.resetToken !== undefined ? data.resetToken : (existing as any).resetToken,
+      resetTokenExpiry: data.resetTokenExpiry !== undefined ? data.resetTokenExpiry : (existing as any).resetTokenExpiry,
+      verificationToken: data.verificationToken !== undefined ? data.verificationToken : (existing as any).verificationToken,
+      verificationTokenExpiry: data.verificationTokenExpiry !== undefined ? data.verificationTokenExpiry : (existing as any).verificationTokenExpiry,
       createdAt: existing.createdAt,
       updatedAt: new Date(),
     });

@@ -17,6 +17,15 @@ vi.mock('@/lib/studentJourney', async (importOriginal) => {
     getNextRecommendation: vi.fn(),
     getMySkillProgress: vi.fn(),
     getAttemptsForStudent: vi.fn(),
+    getMyProfile: vi.fn().mockResolvedValue({
+      id: 'sp1',
+      userId: 'u1',
+      grade: 11,
+      school: 'Örnek Lisesi',
+      learningStage: 'DISCOVERY',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    }),
   };
 });
 
@@ -130,7 +139,15 @@ describe('App', () => {
     for (const [hash, heading] of destinations) {
       window.location.hash = hash;
       const { unmount } = render(<App />);
-      expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+      // Profil now loads data asynchronously, use waitFor with timeout
+      if (hash === 'profil') {
+        await waitFor(
+          () => expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument(),
+          { timeout: 5000 }
+        );
+      } else {
+        expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+      }
       unmount();
     }
   });

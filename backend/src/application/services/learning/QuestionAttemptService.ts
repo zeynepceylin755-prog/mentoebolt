@@ -174,6 +174,25 @@ export class QuestionAttemptService {
       });
     }
 
+    // Create outbox event for question answered
+    await db.outboxEvent.create({
+      data: {
+        eventType: 'QUESTION_ANSWERED',
+        aggregateType: 'QuestionAttempt',
+        aggregateId: attempt.id,
+        payload: JSON.stringify({
+          attemptId: attempt.id,
+          studentId: dto.studentId,
+          questionId: dto.questionId,
+          isCorrect,
+          evaluationState: evaluation.state,
+          isStandalone,
+          sessionId: dto.sessionId,
+        }),
+        status: 'PENDING',
+      },
+    });
+
     logger.info({
       attemptId: attempt.id,
       studentId: dto.studentId,
@@ -182,7 +201,7 @@ export class QuestionAttemptService {
       errorType,
       evaluationState: evaluation.state,
       isStandalone,
-    }, 'Question attempt recorded');
+    }, 'Question attempt recorded with outbox event');
 
     return {
       attemptId: attempt.id,

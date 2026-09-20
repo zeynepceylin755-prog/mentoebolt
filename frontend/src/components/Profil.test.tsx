@@ -20,6 +20,25 @@ vi.mock('@/contexts/AuthContext', () => ({
   }),
 }));
 
+vi.mock('@/lib/studentJourney', () => ({
+  getMyProfile: vi.fn().mockResolvedValue({
+    id: 'sp1',
+    userId: 'u1',
+    grade: 11,
+    school: 'Örnek Lisesi',
+    learningStage: 'DISCOVERY',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  }),
+}));
+
+vi.mock('@/lib/requestCache', () => ({
+  useCachedResource: (key: string, loader: () => Promise<any>, errorMsg: string) => {
+    const data = loader();
+    return { data, loading: false, error: null, refresh: vi.fn() };
+  },
+}));
+
 describe('Profil', () => {
   beforeEach(() => {
     vi.clearAllMocks();

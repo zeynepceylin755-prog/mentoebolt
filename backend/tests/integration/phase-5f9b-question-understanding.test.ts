@@ -115,6 +115,21 @@ describe('Phase 5F.9-B — Provider contract', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it('1b. sends a concise Turkish curriculum and answer-suppression instruction', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(envelope(JSON.stringify(payload()))));
+    await build(fetchImpl).provider.analyze(REQUEST);
+
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, { body: string }];
+    const body = JSON.parse(init.body);
+    const systemPrompt = body.messages.find((message: { role: string }) => message.role === 'system').content;
+
+    expect(systemPrompt).toContain('question understanding');
+    expect(systemPrompt).toContain('curriculumCandidates');
+    expect(systemPrompt).toContain('microSkillCandidates');
+    expect(systemPrompt).toContain('Return ONLY valid JSON');
+    expect(systemPrompt).toContain('Return only the fields in the JSON contract');
+  });
+
   it('2. malformed JSON rejected', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse('definitely not json'));
     const { provider } = build(fetchImpl);

@@ -27,6 +27,7 @@ function makeConfig(overrides: Partial<ErrorAnalysisConfig> = {}): ErrorAnalysis
     model: 'gpt-4o',
     timeoutMs: 5000,
     maxRetries: 2,
+    maxTokens: 1024,
     allowExternalProvider: true,
     baseUrl: 'https://api.example.test/v1',
     apiKey: API_KEY,
@@ -126,6 +127,22 @@ describe('Phase 5F.9-C — Provider contract', () => {
     expect(res.model).toBe('gpt-4o');
   });
 
+  it('1b. sends calm Turkish next-step and hidden-reasoning restrictions', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(envelope(JSON.stringify(payload()))));
+    await build(fetchImpl).provider.completeStructured<any>(
+      { messages: [{ role: 'user', content: 'Analyze this error' }] }, {}
+    );
+
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, { body: string }];
+    const body = JSON.parse(init.body);
+    const systemPrompt = body.messages.find((message: { role: string }) => message.role === 'system').content;
+
+    expect(systemPrompt).toContain('mathematics diagnostics assistant');
+    expect(systemPrompt).toContain('errorType');
+    expect(systemPrompt).toContain('confidence');
+    expect(systemPrompt).toContain('Return ONLY valid JSON');
+  });
+
   it('2. malformed JSON is rejected (non-JSON envelope and non-JSON content)', async () => {
     const badEnvelope = vi.fn(async () => jsonResponse('definitely not json'));
     await expect(
@@ -178,6 +195,14 @@ describe('Phase 5F.9-C — Error taxonomy', () => {
     expect(() => validatePayload(payload({ errorPatternId: 'ep-123' }))).toThrow(AiAnalysisError);
     expect(() => validatePayload(payload({ errorPatternCode: 'EP.CONCEPT.1' }))).toThrow(AiAnalysisError);
     expect(() => validatePayload(payload({ microSkillId: 'ms-abc' }))).toThrow(AiAnalysisError);
+  });
+
+  it('8b. score, mastery and correctness fields are not part of the validated proposal', () => {
+    const validated = validatePayload(payload({ correct: true, score: 100, mastery: 1 }));
+
+    expect(validated).not.toHaveProperty('correct');
+    expect(validated).not.toHaveProperty('score');
+    expect(validated).not.toHaveProperty('mastery');
   });
 
   it('relatedSkills are free text, never treated as database identifiers', async () => {

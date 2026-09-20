@@ -70,4 +70,106 @@ export class AuthController {
       next(error);
     }
   };
+
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_EMAIL',
+            message: 'Email is required',
+          },
+        });
+        return;
+      }
+
+      await this.authService.forgotPassword({ email });
+
+      // Always return success to prevent account enumeration
+      res.json({
+        success: true,
+        message: 'If the email exists in our system, a password reset link will be sent.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_FIELDS',
+            message: 'Token and new password are required',
+          },
+        });
+        return;
+      }
+
+      await this.authService.resetPassword({ token, newPassword });
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { token } = req.body;
+      if (!token) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_TOKEN',
+            message: 'Verification token is required',
+          },
+        });
+        return;
+      }
+
+      await this.authService.verifyEmail({ token });
+
+      res.json({
+        success: true,
+        message: 'Email verified successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resendVerification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_EMAIL',
+            message: 'Email is required',
+          },
+        });
+        return;
+      }
+
+      await this.authService.resendVerification({ email });
+
+      // Always return success to prevent account enumeration
+      res.json({
+        success: true,
+        message: 'If the email exists in our system, a verification link will be sent.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

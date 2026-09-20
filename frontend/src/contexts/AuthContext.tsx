@@ -31,6 +31,8 @@ interface AuthContextType extends AuthState {
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 interface SignupData {
@@ -188,6 +190,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function forgotPassword(email: string) {
+    const response = await fetch(`${apiBaseUrl}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'İstek başarısız');
+    }
+  }
+
+  async function resetPassword(token: string, newPassword: string) {
+    const response = await fetch(`${apiBaseUrl}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Şifre sıfırlama başarısız');
+    }
+  }
+
   async function refreshSession() {
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) {
@@ -255,6 +283,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signup,
     logout,
     refreshSession,
+    forgotPassword,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

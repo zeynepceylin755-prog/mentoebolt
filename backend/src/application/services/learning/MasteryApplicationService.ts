@@ -247,6 +247,24 @@ export class MasteryApplicationService {
       });
       masteryAuditId = audit.id;
 
+      // Create outbox event for mastery update
+      await tx.outboxEvent.create({
+        data: {
+          eventType: 'MASTERY_UPDATED',
+          aggregateType: 'SkillMastery',
+          aggregateId: `${attempt.studentId}-${skillId}`,
+          payload: JSON.stringify({
+            studentId: attempt.studentId,
+            skillId,
+            previousMastery: currentLevel,
+            newMastery: result.newLevel,
+            attemptId: attempt.id,
+            masteryAuditId: audit.id,
+          }),
+          status: 'PENDING',
+        },
+      });
+
       logger.info(
         {
           attemptId: attempt.id,
@@ -255,7 +273,7 @@ export class MasteryApplicationService {
           previousMastery: currentLevel,
           newMastery: result.newLevel,
         },
-        'Mastery applied from question attempt'
+        'Mastery applied from question attempt with outbox event'
       );
 
       return {

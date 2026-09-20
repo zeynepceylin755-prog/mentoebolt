@@ -3,6 +3,14 @@
   command = "npm run build"
   publish = "dist"
 
+# Proxy API requests to Railway backend
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://mentoebolt-production.up.railway.app/api/v1/:splat"
+  status = 200
+  force = true
+
+# SPA routing - all other routes go to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"

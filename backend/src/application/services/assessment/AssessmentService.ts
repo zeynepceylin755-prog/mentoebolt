@@ -318,11 +318,29 @@ export class AssessmentService {
         },
       });
 
+      // Create outbox event for assessment answer
+      await tx.outboxEvent.create({
+        data: {
+          eventType: 'ASSESSMENT_ANSWER_SUBMITTED',
+          aggregateType: 'QuestionAttempt',
+          aggregateId: questionAttempt.id,
+          payload: JSON.stringify({
+            attemptId,
+            questionAttemptId: questionAttempt.id,
+            questionId,
+            isCorrect,
+            assessmentAttemptId: attemptId,
+            studentId: attempt.studentId,
+          }),
+          status: 'PENDING',
+        },
+      });
+
       logger.info({
         attemptId,
         questionId,
         isCorrect,
-      }, 'Assessment answer submitted transactionally');
+      }, 'Assessment answer submitted transactionally with outbox event');
 
       return {
         attemptId,
@@ -423,12 +441,22 @@ export class AssessmentService {
 
       let totalScore = 0;
       let maxScore = 0;
+      const skillScores = new Map<string, { correct: number; total: number }>();
 
       for (const q of attempt.questionAttempts) {
         const points = attempt.assessment.questions.find(aq => aq.questionId === q.questionId)?.points || 1;
         maxScore += points;
         if (q.isCorrect) {
           totalScore += points;
+        }
+
+        // Track skill-level scoring for AssessmentResult
+        if (q.question.skillId) {
+          const current = skillScores.get(q.question.skillId) || { correct: 0, total: 0 };
+          skillScores.set(q.question.skillId, {
+            correct: current.correct + (q.isCorrect ? 1 : 0),
+            total: current.total + 1,
+          });
         }
       }
 
@@ -447,11 +475,60 @@ export class AssessmentService {
         },
       });
 
+      // Create AssessmentResult entries for each skill
+      for (const [skillId, scores] of skillScores.entries()) {
+        await tx.assessmentResult.create({
+          data: {
+            assessmentAttemptId: attemptId,
+            studentId: attempt.studentId,
+            skillId,
+            score: scores.correct,
+            maxScore: scores.total,
+            percentageScore: scores.total > 0 ? (scores.correct / scores.total) * 100 : 0,
+            attempts: scores.total,
+            correctAttempts: scores.correct,
+          },
+        });
+      }
+
+      // Create DiagnosticResult if this is a diagnostic assessment
+      if (attempt.assessment.type === 'DIAGNOSTIC') {
+        await tx.diagnosticResult.create({
+          data: {
+            assessmentAttemptId: attemptId,
+            studentId: attempt.studentId,
+            overallScore: percentageScore,
+            overallConfidence: 0.8, // TODO: Calculate from AI or rules
+            summary: `Diagnostic completed with ${percentageScore.toFixed(1)}% overall score`,
+            skillResults: JSON.stringify(Object.fromEntries(skillScores.entries())),
+          },
+        });
+      }
+
+      // Create outbox event for assessment completion
+      await tx.outboxEvent.create({
+        data: {
+          eventType: 'ASSESSMENT_COMPLETED',
+          aggregateType: 'AssessmentAttempt',
+          aggregateId: attemptId,
+          payload: JSON.stringify({
+            attemptId,
+            studentId: attempt.studentId,
+            assessmentId: attempt.assessmentId,
+            score: totalScore,
+            percentageScore,
+            skillResults: Object.fromEntries(skillScores.entries()),
+          }),
+          status: 'PENDING',
+        },
+      });
+
       logger.info({
         attemptId,
         score: totalScore,
         percentageScore,
-      }, 'Assessment completed transactionally');
+        skillResultsCount: skillScores.size,
+      }, 'Assessment completed transactionally with results and outbox event');
 
       return completed;
     }

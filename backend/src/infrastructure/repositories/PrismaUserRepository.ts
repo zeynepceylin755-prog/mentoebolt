@@ -41,6 +41,38 @@ export class PrismaUserRepository implements IUserRepository {
     return user ? this.toDomain(user) : null;
   }
 
+  async findByResetToken(token: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        deletedAt: null,
+      },
+    });
+
+    // Check expiry in code to ensure consistent behavior
+    if (user && user.resetTokenExpiry && user.resetTokenExpiry < new Date()) {
+      return null;
+    }
+
+    return user ? this.toDomain(user) : null;
+  }
+
+  async findByVerificationToken(token: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+        deletedAt: null,
+      },
+    });
+
+    // Check expiry in code to ensure consistent behavior
+    if (user && user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
+      return null;
+    }
+
+    return user ? this.toDomain(user) : null;
+  }
+
   async findAll(limit: number, offset: number): Promise<User[]> {
     const users = await this.prisma.user.findMany({
       where: { deletedAt: null },
@@ -92,6 +124,10 @@ export class PrismaUserRepository implements IUserRepository {
       loginAttempts: prismaUser.loginAttempts,
       lockedUntil: prismaUser.lockedUntil ?? undefined,
       deletedAt: prismaUser.deletedAt ?? undefined,
+      resetToken: prismaUser.resetToken ?? undefined,
+      resetTokenExpiry: prismaUser.resetTokenExpiry ?? undefined,
+      verificationToken: prismaUser.verificationToken ?? undefined,
+      verificationTokenExpiry: prismaUser.verificationTokenExpiry ?? undefined,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     });

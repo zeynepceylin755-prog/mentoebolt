@@ -12,6 +12,7 @@ import { TokenService, TokenPair } from '../../../domain/services/TokenService.j
 import { PasswordService } from '../../../domain/services/PasswordService.js';
 import { logger } from '../../../infrastructure/logging/logger.js';
 import { randomUUID } from 'crypto';
+import type { EmailProvider } from '../../../infrastructure/email/EmailProvider.js';
 
 export interface RegisterDTO {
   email: string;
@@ -27,6 +28,23 @@ export interface LoginDTO {
   password: string;
   ipAddress?: string;
   userAgent?: string;
+}
+
+export interface ForgotPasswordDTO {
+  email: string;
+}
+
+export interface ResetPasswordDTO {
+  token: string;
+  newPassword: string;
+}
+
+export interface VerifyEmailDTO {
+  token: string;
+}
+
+export interface ResendVerificationDTO {
+  email: string;
 }
 
 export interface AuthResponse {
@@ -57,13 +75,14 @@ export class AuthService {
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly sessionRepository: ISessionRepository,
     private readonly tokenService: TokenService,
-    private readonly passwordService: PasswordService
+    private readonly passwordService: PasswordService,
+    private readonly emailProvider?: EmailProvider
   ) {}
 
   async register(dto: RegisterDTO): Promise<AuthResponse> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      throw new ValidationError('User with this email already exists');
+      throw new AuthenticationError('User with this email already exists');
     }
 
     const passwordValidation = this.passwordService.validatePasswordStrength(dto.password);
@@ -201,6 +220,189 @@ export class AuthService {
     await this.sessionRepository.deleteAllForUser(userId);
 
     logger.info({ userId, hasRefreshToken: !!refreshToken }, 'User logged out');
+  }
+
+  async forgotPassword(dto: ForgotPasswordDTO): Promise<void> {
+    // Look up user by email but don't reveal whether it exists
+    const user = await this.userRepository.findByEmail(dto.email);
+
+    if (!user) {
+      // Security: don't reveal that email doesn't exist
+      // Still return success to prevent account enumeration
+      logger.info({ email: dto.email }, 'Password reset requested for non-existent email');
+      return;
+    }
+
+    // Check if user is soft-deleted
+    if ('deletedAt' in user && user.deletedAt) {
+      logger.info({ userId: user.id }, 'Password reset requested for deleted account');
+      return;
+    }
+
+    // Generate secure reset token
+    const resetToken = this.tokenService.generateSecureToken();
+    const resetTokenExpiry = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+    // Store reset token in user record
+    await this.userRepository.update(user.id, {
+      resetToken,
+      resetTokenExpiry,
+    });
+
+    // Send email with reset link
+    if (this.emailProvider) {
+      try {
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/reset-password?token=${resetToken}`;
+        await this.emailProvider.send({
+          to: user.email,
+          subject: 'Mentora Şifre Sıfırlama',
+          textBody: `Şifreni sıfırlamak için şu bağlantıya tıkla: ${resetLink}\n\nBu bağlantı 1 saat geçerlidir.`,
+          htmlBody: `
+            <h2>Mentora Şifre Sıfırlama</h2>
+            <p>Şifreni sıfırlamak için aşağıdaki bağlantıya tıkla:</p>
+            <p><a href="${resetLink}">Şifremi Sıfırla</a></p>
+            <p>Bu bağlantı 1 saat geçerlidir.</p>
+          `,
+        });
+        logger.info({ userId: user.id }, 'Password reset email sent');
+      } catch (error) {
+        logger.error({ userId: user.id, error }, 'Failed to send password reset email');
+        // Don't throw - still succeed the request to prevent account enumeration
+      }
+    } else {
+      // No email provider configured - log token for development
+      logger.info({ userId: user.id, resetToken }, 'Password reset token generated (no email provider configured)');
+    }
+
+    // Return success regardless of whether user exists
+    // This prevents account enumeration attacks
+  }
+
+  async resetPassword(dto: ResetPasswordDTO): Promise<void> {
+    // Validate new password strength
+    const passwordValidation = this.passwordService.validatePasswordStrength(dto.newPassword);
+    if (!passwordValidation.valid) {
+      throw new ValidationError('Password does not meet requirements', {
+        password: passwordValidation.errors,
+      });
+    }
+
+    // Find user by reset token
+    const user = await this.userRepository.findByResetToken(dto.token);
+
+    if (!user) {
+      throw new AuthenticationError('Invalid or expired reset token');
+    }
+
+    // Check if token is expired
+    if (!user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new AuthenticationError('Reset token has expired');
+    }
+
+    // Hash new password
+    const passwordHash = await this.passwordService.hash(dto.newPassword);
+
+    // Update user password and clear reset token
+    await this.userRepository.update(user.id, {
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiry: null,
+      loginAttempts: 0,
+      lockedUntil: null,
+    });
+
+    // Revoke all refresh tokens and sessions for security
+    await this.refreshTokenRepository.revokeAllForUser(user.id);
+    await this.sessionRepository.deleteAllForUser(user.id);
+
+    logger.info({ userId: user.id }, 'Password reset successfully');
+  }
+
+  async sendVerificationEmail(userId: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new AuthenticationError('User not found');
+    }
+
+    if (user.emailVerified) {
+      // Already verified - no action needed
+      return;
+    }
+
+    // Generate verification token
+    const verificationToken = this.tokenService.generateSecureToken();
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await this.userRepository.update(user.id, {
+      verificationToken,
+      verificationTokenExpiry,
+    });
+
+    // Send verification email
+    if (this.emailProvider) {
+      try {
+        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/verify-email?token=${verificationToken}`;
+        await this.emailProvider.send({
+          to: user.email,
+          subject: 'Mentora E-posta Doğrulama',
+          textBody: `E-posta adresini doğrulamak için şu bağlantıya tıkla: ${verificationLink}\n\nBu bağlantı 24 saat geçerlidir.`,
+          htmlBody: `
+            <h2>Mentora E-posta Doğrulama</h2>
+            <p>E-posta adresini doğrulamak için aşağıdaki bağlantıya tıkla:</p>
+            <p><a href="${verificationLink}">E-postamı Doğrula</a></p>
+            <p>Bu bağlantı 24 saat geçerlidir.</p>
+          `,
+        });
+        logger.info({ userId: user.id }, 'Verification email sent');
+      } catch (error) {
+        logger.error({ userId: user.id, error }, 'Failed to send verification email');
+        // Don't throw - verification is optional in development
+      }
+    } else {
+      logger.info({ userId: user.id, verificationToken }, 'Verification token generated (no email provider configured)');
+    }
+  }
+
+  async verifyEmail(dto: VerifyEmailDTO): Promise<void> {
+    const user = await this.userRepository.findByVerificationToken(dto.token);
+
+    if (!user) {
+      throw new AuthenticationError('Invalid or expired verification token');
+    }
+
+    // Check if token is expired
+    if (!user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
+      throw new AuthenticationError('Verification token has expired');
+    }
+
+    // Mark email as verified and clear token
+    await this.userRepository.update(user.id, {
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+    });
+
+    logger.info({ userId: user.id }, 'Email verified successfully');
+  }
+
+  async resendVerification(dto: ResendVerificationDTO): Promise<void> {
+    // Look up user by email but don't reveal whether it exists
+    const user = await this.userRepository.findByEmail(dto.email);
+
+    if (!user) {
+      // Security: don't reveal that email doesn't exist
+      logger.info({ email: dto.email }, 'Verification resend requested for non-existent email');
+      return;
+    }
+
+    if (user.emailVerified) {
+      // Already verified - no action needed
+      logger.info({ userId: user.id }, 'Verification resend requested for already verified email');
+      return;
+    }
+
+    // Send new verification email
+    await this.sendVerificationEmail(user.id);
   }
 
   private async generateTokens(user: User): Promise<TokenPair> {

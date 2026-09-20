@@ -4,6 +4,8 @@ export interface IUserRepository {
   save(user: User): Promise<User>;
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  findByResetToken(token: string): Promise<User | null>;
+  findByVerificationToken(token: string): Promise<User | null>;
   findAll(limit: number, offset: number): Promise<User[]>;
   update(id: string, data: Partial<{
     passwordHash: string;

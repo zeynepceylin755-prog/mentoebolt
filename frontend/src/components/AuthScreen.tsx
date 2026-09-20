@@ -20,7 +20,7 @@ interface AuthScreenProps {
   onBack?: () => void;
 }
 
-type Mode = 'login' | 'signup';
+type Mode = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'reset-password-sent' | 'reset-success';
 
 /**
  * The backend's password policy, mirrored so the student gets an actionable
@@ -60,16 +60,19 @@ function describePasswordProblem(password: string): string | null {
  * one step instead of a survey.
  */
 export default function AuthScreen({ onAuthenticated, initialMode = 'login', onBack }: AuthScreenProps) {
-  const { login, signup } = useAuth();
+  const { login, signup, forgotPassword, resetPassword } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [grade, setGrade] = useState('');
+  const [resetToken, setResetToken] = useState('');
 
   /** Human wording for auth failures. Raw backend/provider text is never shown. */
   function describeAuthFailure(err: unknown): string {
@@ -130,6 +133,51 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
       return;
     }
 
+    // ---------------------------------------------------------------- forgot password
+    if (mode === 'forgot-password') {
+      if (!email.trim()) {
+        setError('E-posta adresini girmen gerekiyor.');
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await forgotPassword(email.trim());
+        setMode('reset-password-sent');
+      } catch (err) {
+        setError(describeAuthFailure(err));
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // ---------------------------------------------------------------- reset password
+    if (mode === 'reset-password') {
+      if (!resetToken.trim() || !newPassword || !confirmPassword) {
+        setError('Tüm alanları doldurman gerekiyor.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError('Şifreler eşleşmi.');
+        return;
+      }
+      const passwordProblem = describePasswordProblem(newPassword);
+      if (passwordProblem) {
+        setError(passwordProblem);
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await resetPassword(resetToken.trim(), newPassword);
+        setMode('reset-success');
+      } catch (err) {
+        setError(describeAuthFailure(err));
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     // ---------------------------------------------------------------- signup
     if (!email.trim() || !password || !firstName.trim() || !lastName.trim()) {
       setError('Devam etmek için tüm alanları doldur.');
@@ -169,6 +217,11 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
   }
 
   const isSignup = mode === 'signup';
+  const isLogin = mode === 'login';
+  const isForgotPassword = mode === 'forgot-password';
+  const isResetPassword = mode === 'reset-password';
+  const isResetSent = mode === 'reset-password-sent';
+  const isResetSuccess = mode === 'reset-success';
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -191,15 +244,88 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
       <main className="flex flex-1 items-start justify-center px-5 pb-16 sm:items-center sm:px-8">
         <div className="w-full max-w-[420px]">
           <h1 className="font-sora text-page-title font-semibold tracking-tight text-ink">
-            {isSignup ? 'Yolun buradan başlıyor.' : 'Tekrar hoş geldin.'}
+            {mode === 'forgot-password' ? 'Şifreni mi unuttun?' :
+             mode === 'reset-password' ? 'Yeni şifre belirle' :
+             mode === 'reset-password-sent' ? 'E-posta gönderildi' :
+             mode === 'reset-success' ? 'Şifre sıfırlandı' :
+             isSignup ? 'Yolun buradan başlıyor.' : 'Tekrar hoş geldin.'}
           </h1>
           <p className="mt-3 text-body leading-relaxed text-muted">
-            {isSignup
-              ? 'Çözdüğün soruları getir, nerede takıldığını birlikte bulalım.'
-              : 'Kaldığın yerden devam edelim.'}
+            {mode === 'forgot-password' ? 'E-posta adresine şifre sıfırlama bağlantısı göndereceğiz.' :
+             mode === 'reset-password' ? 'Yeni şifreni belirleyebilirsin.' :
+             mode === 'reset-password-sent' ? 'E-postanı kontrol et ve gelen bağlantıyı kullan.' :
+             mode === 'reset-success' ? 'Şifren başarıyla sıfırlandı. Artık yeni şifrenle giriş yapabilirsin.' :
+             isSignup ? 'Çözdüğün soruları getir, nerede takıldığını birlikte bulalım.' :
+             'Kaldığın yerden devam edelim.'}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>
+          {mode === 'reset-password-sent' || mode === 'reset-success' ? (
+            <div className="mt-8">
+              <Button type="button" size="lg" fullWidth onClick={() => switchMode('login')}>
+                Giriş yap
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>
+            {mode === 'reset-password' && (
+              <Input
+                label="Sıfırlama kodu"
+                value={resetToken}
+                onChange={(e) => setResetToken(e.target.value)}
+                autoComplete="one-time-code"
+                required
+              />
+            )}
+
+            <Input
+              label="E-posta"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              placeholder="ornek@email.com"
+              required={mode !== 'reset-password'}
+              disabled={mode === 'reset-password'}
+            />
+
+            <Input
+              label="Şifre"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={isSignup ? 'new-password' : 'current-password'}
+              helperText={
+                isSignup
+                  ? 'En az 8 karakter; büyük harf, küçük harf, rakam ve özel karakter içermeli.'
+                  : undefined
+              }
+              required={mode !== 'reset-password'}
+              disabled={mode === 'reset-password'}
+            />
+
+            {mode === 'reset-password' && (
+              <>
+                <Input
+                  label="Yeni şifre"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  helperText="En az 8 karakter; büyük harf, küçük harf, rakam ve özel karakter içermeli."
+                  required
+                />
+                <Input
+                  label="Şifre tekrar"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+              </>
+            )}
+
             {isSignup && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
@@ -218,30 +344,6 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
                 />
               </div>
             )}
-
-            <Input
-              label="E-posta"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              placeholder="ornek@email.com"
-              required
-            />
-
-            <Input
-              label="Şifre"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={isSignup ? 'new-password' : 'current-password'}
-              helperText={
-                isSignup
-                  ? 'En az 8 karakter; büyük harf, küçük harf, rakam ve özel karakter içermeli.'
-                  : undefined
-              }
-              required
-            />
 
             {isSignup && (
               <Input
@@ -267,13 +369,55 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
             )}
 
             <Button type="submit" size="lg" fullWidth loading={submitting}>
-              {isSignup ? 'Hesabımı oluştur' : 'Giriş yap'}
+              {mode === 'forgot-password' ? 'Gönder' :
+               mode === 'reset-password' ? 'Şifreyi sıfırla' :
+               isSignup ? 'Hesabımı oluştur' : 'Giriş yap'}
               {!submitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </Button>
           </form>
+          )}
 
           <div className="mt-6 border-t border-border pt-6">
-            {isSignup ? (
+            {mode === 'login' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot-password')}
+                  className="inline-flex min-h-[44px] items-center gap-2 text-body-sm font-medium text-ink transition-colors hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Şifremi unuttum
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('signup')}
+                  className="inline-flex min-h-[44px] items-center gap-2 text-body-sm font-medium text-ink transition-colors hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Henüz hesabım yok
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </>
+            )}
+            {mode === 'forgot-password' && (
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className="inline-flex min-h-[44px] items-center gap-2 text-body-sm font-medium text-ink transition-colors hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Girişe dön
+              </button>
+            )}
+            {mode === 'reset-password' && (
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className="inline-flex min-h-[44px] items-center gap-2 text-body-sm font-medium text-ink transition-colors hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Girişe dön
+              </button>
+            )}
+            {isSignup && (
               <button
                 type="button"
                 onClick={() => switchMode('login')}
@@ -281,15 +425,6 @@ export default function AuthScreen({ onAuthenticated, initialMode = 'login', onB
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Zaten hesabım var
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => switchMode('signup')}
-                className="inline-flex min-h-[44px] items-center gap-2 text-body-sm font-medium text-ink transition-colors hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Henüz hesabım yok
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>
