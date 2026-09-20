@@ -91,7 +91,7 @@ export class QuestionAttemptService {
     });
 
     if (!question) {
-      throw new Error('Question not found');
+      throw new AuthorizationError('Question is not available to this student');
     }
 
     // Phase 5F.8 / A3: a student may only answer a Question that is legitimately
