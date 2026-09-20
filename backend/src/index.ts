@@ -239,7 +239,7 @@ export async function bootstrap() {
   // a configurable directory (UPLOAD_DIR). Real OCR reads bytes through this
   // abstraction, never the filesystem directly.
   const storageProvider = new LocalDevStorageProvider(
-    resolveUploadDir((env as any).UPLOAD_DIR)
+    resolveUploadDir(env.UPLOAD_DIR)
   );
 
   // Phase 5E providers. Phase 5F.9-A: OCR is selected by configuration
@@ -420,6 +420,7 @@ export async function bootstrap() {
   app.use('/api/v1', defaultLimiter, createQuestionAttemptRoutes(questionAttemptController, authMiddleware));
   app.use('/api/v1', defaultLimiter, createRecommendationRoutes(recommendationController, authMiddleware));
   app.use('/api/v1', defaultLimiter, createReviewRoutes(reviewController, authMiddleware));
+  // Phase 7.3 - Analytics routes use default limiter (separate from upload budget)
   app.use('/api/v1', defaultLimiter, createAnalyticsRoutes(analyticsController, authMiddleware, ownershipGuard));
   app.use('/api/v1', defaultLimiter, createDocsRoutes());
 
@@ -433,10 +434,21 @@ export async function bootstrap() {
  * Resolve the upload directory. Relative paths are rooted at the process CWD so
  * the behaviour is deterministic regardless of where the server is started.
  * Defaults to `uploads` when unset.
+ * 
+ * Phase 7.3 - Production safety: On Railway/containerized environments, use /tmp/uploads
+ * as a fallback when the configured directory is not writable to avoid permission errors.
  */
 function resolveUploadDir(configured?: string): string {
   const dir = configured && configured.trim().length > 0 ? configured : 'uploads';
-  return path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
+  const resolved = path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
+  
+  // In production/containerized environments, prefer /tmp/uploads for better permission handling
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (nodeEnv === 'production' && !configured) {
+    return '/tmp/uploads';
+  }
+  
+  return resolved;
 }
 
 export function isDirectExecution(): boolean {

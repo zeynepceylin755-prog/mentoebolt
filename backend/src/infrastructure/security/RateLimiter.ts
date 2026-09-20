@@ -45,6 +45,8 @@ export class RateLimiter {
         return userId ? `user:${userId}` : `ip:${req.ip}`;
       },
       validate: { trustProxy: false },
+      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
       handler: (req: Request, res: Response) => {
         res.status(429).json({
           success: false,
@@ -142,6 +144,8 @@ export class RateLimiter {
         return userId ? `user:${userId}:upload` : `ip:${req.ip}:upload`;
       },
       validate: { trustProxy: false },
+      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
       handler: (req: Request, res: Response) => {
         res.status(429).json({
           success: false,

@@ -35,7 +35,8 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().optional(),
   // Phase 5F.8 (C): upload storage. The directory is configurable and used only
   // by the local development storage provider. Files are never stored in Prisma.
-  UPLOAD_DIR: z.string().default('uploads'),
+  // Phase 7.3 - Production safety: Default to /tmp/uploads in production for better permission handling
+  UPLOAD_DIR: z.string().default(process.env.NODE_ENV === 'production' ? '/tmp/uploads' : 'uploads'),
   // Kept below the JSON body limit (10mb) to leave room for base64 overhead
   // (~4/3), so a valid file is never rejected by the transport before this
   // limit is applied. Enforced independently in AssetUploadService.

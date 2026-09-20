@@ -53,8 +53,18 @@ export class LocalDevStorageProvider implements IStorageProvider {
       // Phase 7.3 - Production safety: Railway filesystem is ephemeral.
       // Provide a clear error message if directory creation or write fails.
       const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = error instanceof Error && 'code' in error ? (error as any).code : 'UNKNOWN';
+      
+      // Specific handling for permission errors
+      if (errorCode === 'EACCES' || errorCode === 'EPERM') {
+        throw new Error(
+          `Storage permission denied at ${this.root}: ${errorMessage}. ` +
+          `Consider setting UPLOAD_DIR to a writable directory (e.g., /tmp/uploads) in your environment.`
+        );
+      }
+      
       throw new Error(
-        `Storage write failed at ${this.root}: ${errorMessage}. ` +
+        `Storage write failed at ${this.root}: ${errorMessage} (${errorCode}). ` +
         'If running on Railway/ephemeral storage, consider using a persistent storage provider.'
       );
     }

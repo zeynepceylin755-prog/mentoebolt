@@ -85,7 +85,7 @@ export function getSecurityConfig(): SecurityConfig {
       'Idempotency-Key',
       'X-Upload-Filename',
     ],
-      exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
+      exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
       maxAge: 86400,
       credentials: true,
     },
