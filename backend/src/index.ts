@@ -388,6 +388,7 @@ export async function bootstrap() {
   const defaultLimiter = RateLimiter.getDefaultLimiter();
   const authLimiter = RateLimiter.getAuthLimiter();
   const aiLimiter = RateLimiter.getAILimiter();
+  const uploadLimiter = RateLimiter.getUploadLimiter();
 
   // Phase 5F.8 / A4 — rate limiter ordering.
   // The limiters below are mounted AHEAD of the routers that run
@@ -412,7 +413,8 @@ export async function bootstrap() {
   app.use('/api/v1/ai', aiLimiter, createCanonicalAIRoutes(aiController, authMiddleware));
   app.use('/api/v1/ai', aiLimiter, createAIRoutes(aiController, authMiddleware));
   app.use('/api/v1', defaultLimiter, createAssessmentRoutes(assessmentController, authMiddleware, ownershipGuard));
-  app.use('/api/v1', defaultLimiter, createQuestionIngestionRoutes(questionIngestionController, authMiddleware, assetUploadController));
+  // Phase 7.3 - Use dedicated upload limiter for question ingestion routes
+  app.use('/api/v1', uploadLimiter, createQuestionIngestionRoutes(questionIngestionController, authMiddleware, assetUploadController));
   app.use('/api/v1', defaultLimiter, createCurriculumCandidateRoutes(curriculumCandidateController, authMiddleware));
   app.use('/api/v1', defaultLimiter, createQuestionSkillMappingRoutes(questionSkillMappingController, authMiddleware));
   app.use('/api/v1', defaultLimiter, createQuestionAttemptRoutes(questionAttemptController, authMiddleware));

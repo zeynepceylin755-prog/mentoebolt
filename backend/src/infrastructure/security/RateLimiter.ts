@@ -123,4 +123,42 @@ export class RateLimiter {
       validate: { trustProxy: false },
     }));
   }
+
+  /**
+   * Phase 7.3 - Upload-specific rate limiter.
+   * Upload endpoints are more request-intensive during analysis workflows.
+   * Separate from default limiter to prevent analytics requests from consuming
+   * the upload budget and vice versa.
+   */
+  static getUploadLimiter() {
+    const config = getSecurityConfig().rateLimit;
+
+    return RateLimiter.track(rateLimit({
+      windowMs: config.windowMs,
+      max: config.max * 2, // Double the default limit for upload workflows
+      keyGenerator: (req: Request) => {
+        // Phase 5F.8 / A4: same user-keyed strategy as default limiter
+        const userId = (req as any).userId;
+        return userId ? `user:${userId}:upload` : `ip:${req.ip}:upload`;
+      },
+      validate: { trustProxy: false },
+      handler: (req: Request, res: Response) => {
+        res.status(429).json({
+          success: false,
+          error: {
+            code: 'UPLOAD_RATE_LIMIT_EXCEEDED',
+            message: 'Too many upload requests, please try again later.',
+          },
+        });
+      },
+      skip: (req: Request) => {
+        // Skip rate limiting for health probes
+        return (
+          req.path === '/health' ||
+          req.path === '/health/live' ||
+          req.path === '/health/ready'
+        );
+      },
+    }));
+  }
 }

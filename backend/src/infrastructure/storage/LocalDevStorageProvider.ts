@@ -46,8 +46,18 @@ export class LocalDevStorageProvider implements IStorageProvider {
     const objectName = `${contentHash}.${sanitizeExtension(input.extension)}`;
     const absolutePath = this.resolveObjectPath(objectName);
 
-    await fs.mkdir(this.root, { recursive: true });
-    await fs.writeFile(absolutePath, input.data);
+    try {
+      await fs.mkdir(this.root, { recursive: true });
+      await fs.writeFile(absolutePath, input.data);
+    } catch (error) {
+      // Phase 7.3 - Production safety: Railway filesystem is ephemeral.
+      // Provide a clear error message if directory creation or write fails.
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Storage write failed at ${this.root}: ${errorMessage}. ` +
+        'If running on Railway/ephemeral storage, consider using a persistent storage provider.'
+      );
+    }
 
     return {
       ref: toRef(objectName),

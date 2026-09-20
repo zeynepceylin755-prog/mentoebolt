@@ -58,7 +58,21 @@ export function errorHandler(
     return;
   }
 
-  logger.error({ error: err, path: req.path, stack: err.stack }, 'Unhandled error');
+  // Phase 7.3 - Enhanced error logging for production diagnostics
+  // Log request context without exposing sensitive data
+  logger.error(
+    {
+      error: err,
+      path: req.path,
+      method: req.method,
+      stack: err.stack,
+      // Log user ID for correlation without exposing personal data
+      userId: (req as any).userId ? 'present' : 'absent',
+      // Log request size without logging body content
+      contentLength: req.get('content-length'),
+    },
+    'Unhandled error'
+  );
 
   res.status(500).json({
     success: false,
