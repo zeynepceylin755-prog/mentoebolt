@@ -10,7 +10,31 @@ import { QuestionUnderstandingProposal } from '../../../domain/ingestion/questio
 
 export interface QuestionUnderstandingRequest {
   ingestionId: string;
-  normalizedText: string;
+  /**
+   * Normalized question text.
+   *
+   * Required for TEXT_PASTE. For IMAGE_UPLOAD it is OPTIONAL: the question may
+   * exist only as an image, in which case the provider receives the image
+   * content part instead (see `image`).
+   */
+  normalizedText?: string;
+  /**
+   * Optional image input for an IMAGE_UPLOAD ingestion.
+   *
+   * The bytes are supplied by the caller from the storage abstraction — the
+   * provider NEVER resolves a filesystem path itself and NEVER receives a
+   * `local://...` reference as if it were content. This keeps the storage
+   * boundary in one place (QuestionAnalysisService) and lets the provider stay a
+   * transport-only adapter.
+   */
+  image?: {
+    /** Verified MIME type of the image (e.g. image/png). */
+    mimeType: string;
+    /** Raw image bytes. Never logged. */
+    data: Buffer;
+    /** Opaque asset reference, for metadata/logging only — never sent as content. */
+    assetRef: string;
+  };
   /** Available curriculum context for the AI to reference */
   curriculumContext?: {
     learningOutcomes: Array<{ id: string; code: string; text: string }>;

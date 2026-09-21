@@ -10,6 +10,7 @@ import {
 } from '../../../domain/ingestion/questionUnderstandingProposal.js';
 import { AiAnalysisError } from '../../../domain/errors/QuestionAnalysisErrors.js';
 import { isValidConfidence } from '../../../domain/ingestion/confidencePolicy.js';
+import type { IStorageProvider } from '../../../domain/interfaces/storage/IStorageProvider.js';
 import { logger } from '../../logging/logger.js';
 import type { QuestionUnderstandingConfig } from './config/QuestionUnderstandingConfig.js';
 
@@ -54,6 +55,12 @@ export type FetchLike = (
 export interface RealQuestionUnderstandingProviderOptions {
   fetchImpl?: FetchLike;
   sleepImpl?: (ms: number) => Promise<void>;
+  /**
+   * Phase 7.5: only the multimodal (Gemini) provider uses this, to resolve an
+   * IMAGE_UPLOAD asset into bytes. Declared here so the factory can pass one
+   * options object to every provider kind.
+   */
+  storageProvider?: IStorageProvider;
 }
 
 /** Confidence used when the model gives no usable number (below the 0.5 gate). */
@@ -124,6 +131,16 @@ export class RealQuestionUnderstandingProvider implements IQuestionUnderstanding
 
   async analyze(request: QuestionUnderstandingRequest): Promise<QuestionUnderstandingResponse> {
     const startedAt = Date.now();
+
+    // Phase 7.5: `normalizedText` is optional on the contract (an IMAGE_UPLOAD may
+    // carry the question only as an image). This OpenAI-compatible provider is
+    // text-only, so it still requires usable text and says so explicitly. The
+    // Gemini provider is the multimodal implementation.
+    if (request?.image) {
+      throw new AiAnalysisError(
+        'This question understanding provider is text-only and cannot analyse image input'
+      );
+    }
 
     if (!request || typeof request.normalizedText !== 'string' || request.normalizedText.trim().length === 0) {
       throw new AiAnalysisError('Question understanding requires non-empty normalizedText');
@@ -356,7 +373,7 @@ export class RealQuestionUnderstandingProvider implements IQuestionUnderstanding
 
     const proposal: QuestionUnderstandingProposal = {
       ingestionId: request.ingestionId,
-      normalizedText: request.normalizedText,
+      normalizedText: request.normalizedText ?? '',
       questionUnderstanding: parsed.questionUnderstanding,
       curriculumCandidates,
       microSkillCandidates,

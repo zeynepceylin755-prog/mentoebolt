@@ -11,6 +11,7 @@ import {
   type QuestionUnderstandingConfig,
 } from './config/QuestionUnderstandingConfig.js';
 import { logger } from '../../logging/logger.js';
+import type { IStorageProvider } from '../../../domain/interfaces/storage/IStorageProvider.js';
 
 /**
  * Question Understanding provider factory — Phase 5F.9-B
@@ -77,11 +78,17 @@ export function createQuestionUnderstandingProviderFromConfig(
           'QUESTION_UNDERSTANDING_PROVIDER=gemini requires GEMINI_API_KEY to be configured'
         );
       }
+      if (!options.storageProvider) {
+        throw new AiAnalysisError(
+          'QUESTION_UNDERSTANDING_PROVIDER=gemini requires a storage provider ' +
+          'so IMAGE_UPLOAD assets can be resolved into multimodal input'
+        );
+      }
       logger.info(
         { provider: config.provider, model: config.model, timeoutMs: config.timeoutMs },
         'Gemini question understanding provider enabled (external data egress allowed)'
       );
-      return new GeminiQuestionUnderstandingProvider(config);
+      return new GeminiQuestionUnderstandingProvider(config, options.storageProvider);
     }
 
     default:

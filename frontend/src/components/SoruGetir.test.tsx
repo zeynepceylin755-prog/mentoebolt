@@ -134,23 +134,28 @@ describe('SoruGetir', () => {
     expect(createIngestion).not.toHaveBeenCalled();
   });
 
-  it('stops honestly when a photo yields no readable text', async () => {
+  it('sends a photo for analysis without requiring the student to type text', async () => {
     const user = userEvent.setup();
     uploadAsset.mockResolvedValue({
       ingestion,
       asset: { mimeType: 'image/png', sizeBytes: 3, contentHash: 'abc' },
     });
+    analyzeIngestion.mockResolvedValue({});
 
     const { container } = render(<SoruGetir />);
     const galleryInput = container.querySelectorAll('input[type="file"]')[1] as HTMLInputElement;
     await user.upload(galleryInput, makeImageFile());
     await user.click(screen.getByRole('button', { name: /Soruyu incele/ }));
 
-    expect(
-      await screen.findByText(/Fotoğraftaki soruyu okuyamadım/)
-    ).toBeInTheDocument();
+    // The photo IS the question: analysis must run even with an empty text field.
+    await waitFor(() => expect(analyzeIngestion).toHaveBeenCalledTimes(1));
+    const [ingestionId, options] = analyzeIngestion.mock.calls[0];
+    expect(ingestionId).toBe(ingestion.id);
+    expect(options).toMatchObject({ ingestMethod: 'IMAGE_UPLOAD' });
     // No placeholder sentence is ever sent for analysis on the student's behalf.
-    expect(analyzeIngestion).not.toHaveBeenCalled();
+    expect(options?.normalizedText).toBe('');
+    // The early-stop message must NOT be shown any more.
+    expect(screen.queryByText(/Fotoğraftaki soruyu okuyamadım/)).not.toBeInTheDocument();
   });
 
   it('shows progressive, human progress steps while analysing', async () => {

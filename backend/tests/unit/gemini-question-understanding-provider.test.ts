@@ -19,7 +19,7 @@ const createMock = vi.fn();
 vi.mock('@google/genai', () => {
   class GoogleGenAI {
     interactions = { create: createMock };
-    constructor(_options: { apiKey?: string }) {}
+    constructor(_options: { apiKey?: string }) { }
   }
   return { GoogleGenAI };
 });

@@ -55,6 +55,24 @@ export interface UploadedAssetResult {
   asset: { mimeType: string; sizeBytes: number; contentHash: string };
 }
 
+/**
+ * Result of a completed analysis, as projected by the backend. Only the fields
+ * the student UI needs are typed; the backend remains authoritative.
+ */
+export interface IngestionAnalysisResult {
+  ingestionId: string;
+  state: string;
+  requiresReview: boolean;
+  warnings: string[];
+  proposal?: {
+    questionUnderstanding?: {
+      questionType?: string;
+      mathematicalObjects?: string[];
+      requestedOperation?: string;
+    };
+  };
+}
+
 export interface ReviewQueueItem {
   ingestionId: string;
   state: IngestionState;
@@ -288,13 +306,33 @@ export function createIngestion(
   });
 }
 
+/**
+ * Analyze an ingestion.
+ *
+ * TEXT_PASTE: the text the student typed is sent as `normalizedText` and OCR is
+ * skipped, because there is nothing to extract — the text IS the source.
+ *
+ * IMAGE_UPLOAD: NO `normalizedText` is required (the backend reads the uploaded
+ * image), and `skipOcr` is deliberately NOT sent, so the backend decides how to
+ * source the question from the stored asset. Sending `skipOcr: true` here would
+ * suppress the image path entirely.
+ */
 export function analyzeIngestion(
   ingestionId: string,
-  normalizedText: string
+  options: { normalizedText?: string; ingestMethod?: string } = {}
 ): Promise<unknown> {
+  const isImageUpload = options.ingestMethod === 'IMAGE_UPLOAD';
+  const text = options.normalizedText?.trim() ?? '';
+
+  const body: Record<string, unknown> = isImageUpload
+    ? text.length > 0
+      ? { normalizedText: text }
+      : {}
+    : { skipOcr: true, normalizedText: text };
+
   return apiRequest(`/question-ingestions/${ingestionId}/analyze`, {
     method: 'POST',
-    body: { skipOcr: true, normalizedText },
+    body,
   });
 }
 

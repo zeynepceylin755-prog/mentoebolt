@@ -9,6 +9,7 @@ import {
   MicroSkillCandidateProposal,
 } from '../../../domain/ingestion/questionUnderstandingProposal.js';
 import { AiAnalysisError } from '../../../domain/errors/QuestionAnalysisErrors.js';
+import type { IStorageProvider } from '../../../domain/interfaces/storage/IStorageProvider.js';
 import { logger } from '../../logging/logger.js';
 import type { QuestionUnderstandingConfig } from './config/QuestionUnderstandingConfig.js';
 import { GoogleGenAI, type Interactions } from '@google/genai';
@@ -40,16 +41,33 @@ import { GoogleGenAI, type Interactions } from '@google/genai';
  *   latest models. The legacy `@google/generative-ai` SDK + `generateContent`
  *   call is no longer used here.
  *
- * Image input: `QuestionUnderstandingRequest` only carries `normalizedText`
- * today. `analyze` therefore builds a text input, but the request construction is
- * kept behind `buildPrompt` so a future multimodal content part can be added
- * without changing the provider contract or this response-mapping logic.
+ * Image input (Phase 7.5): `QuestionUnderstandingRequest` may now carry an
+ * optional `image` content part (mimeType + bytes, resolved by the caller from the
+ * storage abstraction). TEXT_PASTE requests still send a plain text input; an
+ * IMAGE_UPLOAD request sends the real image content part to the Interactions API,
+ * optionally accompanied by the student's own normalized text. The opaque asset
+ * reference is NEVER sent as content — only the bytes are.
+ *
+ * The response schema, validation and proposal mapping are shared by both input
+ * shapes, so the existing text contract is unchanged.
  */
 
 /** Confidence used when the model gives no usable number (below the 0.5 gate). */
 const CONSERVATIVE_FALLBACK_CONFIDENCE = 0.3;
 
 const MAX_CANDIDATES = 8;
+
+/** Base64-encode image bytes for the API. The result is never logged. */
+function toBase64(data: Buffer): string {
+  return Buffer.isBuffer(data) ? data.toString('base64') : Buffer.from(data ?? []).toString('base64');
+}
+
+const IMAGE_INSTRUCTION = `An image of a mathematics question is attached.
+Read the question directly from the image: equations, expressions, tables, graphs, geometric figures and any accompanying text.
+Interpret the mathematical notation as accurately as you can (fractions, exponents, radicals, inequalities, matrices, subscripts/superscripts).
+If a symbol is genuinely ambiguous in the image, do NOT silently pick an interpretation: lower your confidence and add a warning.
+Do NOT solve the question and do NOT produce an answer — produce only the structured question-understanding analysis defined by the response contract.
+All rules above still apply: never invent curriculum or MicroSkill identifiers, and if no CURRICULUM CONTEXT is provided, return NO curriculum or MicroSkill candidates.`;
 
 const SYSTEM_PROMPT = `You are a mathematics education analyst for an 11th-grade curriculum.
 You CLASSIFY a question for a learning path. You do NOT solve it and you are NOT an answer authority.
@@ -64,6 +82,7 @@ STRICT RULES:
 
 Return ONLY valid JSON of the exact shape:
 {
+  "extractedText": string,
   "questionUnderstanding": {
     "questionType": string,
     "mathematicalObjects": string[],
@@ -85,6 +104,9 @@ All confidence values must be finite numbers in [0,1]. Rationale is a short just
 const RESPONSE_SCHEMA: Record<string, unknown> = {
   type: 'object',
   properties: {
+    // The model's faithful transcription of the question — for an image input this
+    // is the reading of the image, and it becomes the ingestion's text.
+    extractedText: { type: 'string' },
     questionUnderstanding: {
       type: 'object',
       properties: {
@@ -135,9 +157,14 @@ const RESPONSE_SCHEMA: Record<string, unknown> = {
 export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandingProvider {
   private readonly config: QuestionUnderstandingConfig;
   private readonly client: GoogleGenAI;
-  private readonly version = '2.0.0';
+  private readonly version = '2.1.0';
 
-  constructor(config: QuestionUnderstandingConfig) {
+  constructor(config: QuestionUnderstandingConfig, _storage?: IStorageProvider) {
+    // The storage provider is intentionally NOT used inside the provider: bytes
+    // are resolved by QuestionAnalysisService and handed over as `request.image`.
+    // The parameter exists so the factory can wire a uniform options object and so
+    // the multimodal capability is declared where provider selection happens.
+    void _storage;
     this.config = config;
 
     if (!config.geminiApiKey || config.geminiApiKey.trim().length === 0) {
@@ -203,15 +230,21 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
       }
 
       const processingTimeMs = Date.now() - startedAt;
+      const textLength = (request.normalizedText ?? '').length;
 
       logger.info({
         ingestionId: request.ingestionId,
-        textLength: request.normalizedText.length,
+        textLength,
+        // Content-free evidence that the image content part was actually sent.
+        hasImage: Boolean(request.image),
+        imageMimeType: request.image?.mimeType,
+        imageBytes: request.image?.data?.byteLength,
         confidence,
         warningsCount: warnings.length,
         processingTimeMs,
         provider: 'gemini',
         model: this.config.model,
+        inputMode: request.image ? 'multimodal' : 'text',
       }, 'Gemini question understanding analysis completed');
 
       return {
@@ -247,7 +280,7 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
   private async callGemini(request: QuestionUnderstandingRequest): Promise<Interactions.Interaction> {
     return this.client.interactions.create({
       model: this.config.model,
-      input: this.buildPrompt(request),
+      input: this.buildInput(request),
       system_instruction: SYSTEM_PROMPT,
       generation_config: {
         // NOTE: the Interactions API GenerationConfig has no `temperature`; the
@@ -353,11 +386,34 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
   }
 
   /**
-   * Builds the Interactions `input` for a normalized question.
+   * Builds the Interactions `input`.
    *
-   * Text-only today (the contract carries `normalizedText` only). Kept as a
-   * dedicated method so an image/OCR content part can be appended later without
-   * touching the provider contract or the response-mapping logic below.
+   * TEXT request  → the prompt string alone (unchanged behaviour).
+   * IMAGE request → the SAME prompt string (curriculum context + instruction)
+   *                 followed by the real image content part, so the model receives
+   *                 the image bytes rather than a reference to them.
+   */
+  private buildInput(request: QuestionUnderstandingRequest): Interactions.InteractionCreateParams['input'] {
+    const prompt = this.buildPrompt(request);
+
+    if (!request.image) {
+      return prompt;
+    }
+
+    return [
+      { type: 'input_text', text: `${prompt}\n\n${IMAGE_INSTRUCTION}` },
+      {
+        type: 'input_image',
+        // The raw bytes of the uploaded image reach the API here. The opaque
+        // assetRef is intentionally NOT part of the payload.
+        data: toBase64(request.image.data),
+        mime_type: request.image.mimeType,
+      },
+    ] as unknown as Interactions.InteractionCreateParams['input'];
+  }
+
+  /**
+   * Builds the text prompt shared by both input shapes.
    */
   private buildPrompt(request: QuestionUnderstandingRequest): string {
     let prompt = '';
@@ -382,8 +438,23 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
       prompt += '\n';
     }
 
-    prompt += 'QUESTION TO ANALYZE:\n';
-    prompt += request.normalizedText;
+      prompt += 'QUESTION TO ANALYZE:\n';
+
+    if (request.image) {
+      // `extractedText` is required for an image so the transcription can be used
+      // as the ingestion's text by the caller.
+      prompt += 'Also transcribe the question you read from the image into the "extractedText" field, preserving the mathematical notation.\n';
+      // The question itself lives in the attached image; any student-supplied
+      // text is additional context, never a substitute for the image.
+      prompt += '[the question is provided in the attached image]';
+      const extra = (request.normalizedText ?? '').trim();
+      if (extra.length > 0) {
+        prompt += `\nSTUDENT-PROVIDED TEXT (additional context):\n${extra}`;
+      }
+      return prompt;
+    }
+
+    prompt += request.normalizedText ?? '';
 
     return prompt;
   }
@@ -391,7 +462,8 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
   private buildProposal(
     request: QuestionUnderstandingRequest,
     jsonResponse: any
-  ): QuestionUnderstandingProposal {
+  ): QuestionUnderstandingProposal { // eslint-disable-line @typescript-eslint/no-unused-vars
+    const proposalText = (request.normalizedText ?? '').trim();
     const questionUnderstanding = jsonResponse.questionUnderstanding || {
       questionType: 'UNKNOWN',
       mathematicalObjects: [],
@@ -416,9 +488,15 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
         rationale: c.rationale || 'No rationale provided',
       }));
 
+    const extractedText =
+      typeof jsonResponse.extractedText === 'string' && jsonResponse.extractedText.trim().length > 0
+        ? jsonResponse.extractedText.trim()
+        : undefined;
+
     return {
       ingestionId: request.ingestionId,
-      normalizedText: request.normalizedText,
+      ...(extractedText ? { extractedText } : {}),
+      normalizedText: proposalText || extractedText || '',
       questionUnderstanding,
       curriculumCandidates,
       microSkillCandidates,

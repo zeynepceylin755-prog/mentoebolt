@@ -249,7 +249,7 @@ export async function bootstrap() {
   // Phase 5F.9-B: Question Understanding is likewise selected by configuration
   // (QUESTION_UNDERSTANDING_PROVIDER, safe default 'mock'); a misconfigured real
   // provider fails fast at startup.
-  const questionUnderstandingProvider = createQuestionUnderstandingProvider();
+  const questionUnderstandingProvider = createQuestionUnderstandingProvider({ storageProvider });
   // Phase 5F.9-C: Error Analysis is likewise selected configuration
   // (ERROR_ANALYSIS_PROVIDER, safe default 'mock'). A misconfigured real provider
   // fails fast at startup — it is never silently downgraded to mock.
@@ -322,7 +322,9 @@ export async function bootstrap() {
     curriculumCandidateService,
     questionSkillMappingService,
     questionIngestionService,
-    questionCurriculumMappingService
+    questionCurriculumMappingService,
+    // Phase 7.5: resolves an IMAGE_UPLOAD asset into bytes for multimodal input.
+    storageProvider
   );
 
   // Analytics services

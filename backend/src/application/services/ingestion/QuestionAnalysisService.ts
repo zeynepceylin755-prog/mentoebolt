@@ -3,6 +3,7 @@ import { logger } from '../../../infrastructure/logging/logger.js';
 import { IdempotencyService } from '../../../infrastructure/idempotency/IdempotencyService.js';
 import { IOcrProvider } from '../../../domain/interfaces/ocr/IOcrProvider.js';
 import { IQuestionUnderstandingProvider } from '../../../domain/interfaces/ai/IQuestionUnderstandingProvider.js';
+import { IStorageProvider } from '../../../domain/interfaces/storage/IStorageProvider.js';
 import { QuestionNormalizationService } from './QuestionNormalizationService.js';
 import { ProposalValidator } from './ProposalValidator.js';
 import { CurriculumProposalValidator } from './CurriculumProposalValidator.js';
@@ -41,6 +42,33 @@ const ANALYSIS_TRANSACTION_TIMEOUT_MS = Math.max(
   Number(process.env.QUESTION_UNDERSTANDING_TIMEOUT_MS) || 0,
   Number(process.env.OCR_TIMEOUT_MS) || 0
 );
+
+/**
+ * Image MIME types the multimodal question-understanding provider can accept
+ * directly. When an IMAGE_UPLOAD carries one of these, the image goes to the
+ * provider as content and no OCR pass is required.
+ */
+const MULTIMODAL_IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+/**
+ * MIME type inferred from magic bytes, used only when the persisted
+ * `originalAssetMimeType` is absent. Keeps the provider input trustworthy without
+ * trusting a client-declared value that was never stored.
+ */
+function inferImageMimeType(data: Buffer): string | null {
+  if (data.length < 4) return null;
+  if (data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47) return 'image/png';
+  if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return 'image/jpeg';
+  if (
+    data.length >= 12 &&
+    data.toString('ascii', 0, 4) === 'RIFF' &&
+    data.toString('ascii', 8, 12) === 'WEBP'
+  ) {
+    return 'image/webp';
+  }
+  if (data.length >= 6 && data[0] === 0x47 && data[1] === 0x49 && data[2] === 0x46) return 'image/gif';
+  return null;
+}
 
 export const ANALYSIS_AUDIT_ACTIONS = {
   QUESTION_AI_ANALYZED: 'QUESTION_AI_ANALYZED',
@@ -108,7 +136,13 @@ export class QuestionAnalysisService {
     private readonly curriculumCandidateService?: CurriculumCandidateService,
     private readonly skillMappingService?: QuestionSkillMappingService,
     private readonly ingestionService?: QuestionIngestionService,
-    curriculumMappingService?: QuestionCurriculumMappingService
+    curriculumMappingService?: QuestionCurriculumMappingService,
+    /**
+     * Phase 7.5: storage abstraction used to resolve an IMAGE_UPLOAD's
+     * `originalAssetRef` into bytes for multimodal question understanding. The AI
+     * provider never touches storage or the filesystem itself.
+     */
+    private readonly storageProvider?: IStorageProvider
   ) {
     // Phase 5F.2: candidate/mapping persistence is now owned by the dedicated
     // orchestration service, which runs OUTSIDE the analysis transaction. When
@@ -245,8 +279,56 @@ export class QuestionAnalysisService {
     let ocrConfidence = dto.ocrConfidence;
     let normalizedText = dto.normalizedText;
 
-    // Step 1: OCR (if needed and available)
-    if (!dto.skipOcr && !ocrText && this.ocrProvider && ingestion.originalAssetRef) {
+    // Step 0 (Phase 7.5): resolve the uploaded IMAGE_UPLOAD asset into real bytes
+    // so the multimodal provider can receive the image itself. The bytes are read
+    // through the storage abstraction — never from a filesystem path — and are
+    // used ONLY to build the provider request: the opaque asset ref is never sent
+    // to the model as if it were content.
+    let imageInput: { mimeType: string; data: Buffer; assetRef: string } | undefined;
+
+    if (
+      this.aiProvider &&
+      this.storageProvider &&
+      ingestion.ingestMethod === 'IMAGE_UPLOAD' &&
+      typeof ingestion.originalAssetRef === 'string' &&
+      ingestion.originalAssetRef.trim().length > 0
+    ) {
+      const assetRef: string = ingestion.originalAssetRef;
+      try {
+        const bytes = await this.storageProvider.read(assetRef);
+        if (bytes && bytes.byteLength > 0) {
+          const mimeType = (
+            ingestion.originalAssetMimeType || inferImageMimeType(bytes) || ''
+          ).toLowerCase();
+
+          if (MULTIMODAL_IMAGE_MIME_TYPES.includes(mimeType)) {
+            imageInput = { mimeType, data: bytes, assetRef };
+          } else {
+            // A non-image asset (e.g. PDF) cannot go to the multimodal provider.
+            // Fall back to the existing OCR path rather than failing here.
+            warnings.push(`Asset MIME type "${mimeType || 'unknown'}" is not a supported image for multimodal analysis`);
+          }
+        }
+      } catch (error) {
+        // Asset retrieval is best-effort at this point: the OCR path (or the
+        // caller-supplied text) may still be able to produce usable text.
+        warnings.push(`Image asset could not be read for multimodal analysis: ${error instanceof Error ? error.name : typeof error}`);
+      }
+    }
+
+    const hasImageInput = Boolean(imageInput);
+
+    // Step 1: OCR (if needed and available).
+    // Phase 7.5: OCR is SKIPPED when the image itself is going to the multimodal
+    // provider — running a text-only OCR pass first would be redundant (and, with
+    // the mock OCR provider, actively wrong). TEXT_PASTE behaviour is unchanged.
+    if (
+      !dto.skipOcr &&
+      !ocrText &&
+      !hasImageInput &&
+      this.ocrProvider &&
+      ingestion.originalAssetRef
+    ) {
       try {
         const ocrResult = await this.ocrProvider.extract({
           assetRef: ingestion.originalAssetRef,
@@ -290,8 +372,11 @@ export class QuestionAnalysisService {
       }
     }
 
-    // If we still don't have normalized text, we can't proceed
-    if (!normalizedText) {
+    // Step 2b: requirement gate.
+    //   TEXT_ONLY      → normalizedText is required (unchanged behaviour).
+    //   WITH IMAGE     → an image asset is sufficient on its own; the question
+    //                    lives in the image and the multimodal provider reads it.
+    if (!normalizedText && !hasImageInput) {
       throw new ValidationError('No text available for analysis (OCR failed or not provided)');
     }
 
@@ -315,18 +400,47 @@ export class QuestionAnalysisService {
 
         const aiResponse = await this.aiProvider.analyze({
           ingestionId,
-          normalizedText,
+          // Undefined for a pure image question: the image content part carries
+          // the question instead. TEXT_PASTE always supplies text (unchanged).
+          normalizedText: normalizedText || undefined,
+          ...(imageInput ? { image: imageInput } : {}),
           curriculumContext,
         });
 
         aiProposal = aiResponse.proposal;
         warnings.push(...aiResponse.warnings);
 
+        // An image-only question has no text yet. The multimodal provider is the
+        // reader of the image, so its reading (the proposal's `extractedText` /
+        // `normalizedText`) becomes the ingestion's text from here on. This keeps
+        // every downstream step — validation, canonicalization, curriculum
+        // mapping, mastery — operating on text exactly as it does for TEXT_PASTE.
+        if (!normalizedText) {
+          const readText = (
+            aiProposal?.extractedText ??
+            aiProposal?.normalizedText ??
+            ''
+          ).trim();
+          if (readText.length > 0) {
+            normalizedText = readText;
+            await tx.questionIngestion.update({
+              where: { id: ingestionId },
+              data: { normalizedText: readText },
+            });
+          }
+        }
+
         // Step 5: Validate proposal structure
         const proposalValidator = new ProposalValidator();
         const validatedProposal = proposalValidator.validateProposal(aiProposal);
         proposalValidator.validateCurriculumCandidateLevels(validatedProposal);
-        proposalValidator.validateNormalizedText(validatedProposal);
+        // The normalized-text check is a TEXT-input guarantee. When the question
+        // came from an image there is no extracted text to check, so the model's
+        // own reading of the image is what the validators below act on. The
+        // structural/curriculum/confidence rules are unchanged in both modes.
+        if (!imageInput) {
+          proposalValidator.validateNormalizedText(validatedProposal);
+        }
 
         // Step 6: Validate curriculum candidates
         const curriculumValidator = new CurriculumProposalValidator(tx);

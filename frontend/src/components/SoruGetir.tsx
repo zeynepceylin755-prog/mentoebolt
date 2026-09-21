@@ -179,14 +179,19 @@ export default function SoruGetir({ onNavigate }: SoruGetirProps) {
     try {
       let ingestionId: string | null = null;
       let analysisText: string;
+      let ingestMethod: string;
 
       if (file) {
         const uploaded = await uploadAsset(file);
         ingestionId = uploaded.ingestion.id;
+        ingestMethod = 'IMAGE_UPLOAD';
+        // The photo is the question. Any text the student also typed is optional
+        // additional context, never a substitute for the image.
         analysisText = questionText.trim();
       } else {
         const ingestion = await createIngestion({ rawText: questionText.trim() });
         ingestionId = ingestion.id;
+        ingestMethod = 'TEXT_PASTE';
         analysisText = questionText.trim();
       }
 
@@ -197,18 +202,12 @@ export default function SoruGetir({ onNavigate }: SoruGetirProps) {
       setPhase('processing');
       setProgressIndex(1);
 
-      // If the student only supplied a photo and the backend cannot read any text
-      // from it yet, we stop here honestly instead of sending a placeholder
-      // sentence to be "understood" as if it were the question.
-      if (!analysisText) {
-        setError(
-          'Fotoğraftaki soruyu okuyamadım. Soruyu metin olarak da yazarsan birlikte inceleyebiliriz.'
-        );
-        setPhase('error');
-        return;
-      }
-
-      await analyzeIngestion(ingestionId, analysisText);
+      // The backend reads the question from the uploaded image for IMAGE_UPLOAD,
+      // so an absent text field is a legitimate state rather than an early stop.
+      await analyzeIngestion(ingestionId, {
+        normalizedText: analysisText,
+        ingestMethod,
+      });
 
       setProgressIndex(2);
       await transitionIngestion(ingestionId, 'MAPPED').catch(async () => {
@@ -217,7 +216,9 @@ export default function SoruGetir({ onNavigate }: SoruGetirProps) {
 
       const canonical = await createCanonicalQuestion(ingestionId);
       setQuestionId(canonical.question.id);
-      setDisplayQuestion(canonical.question.content || analysisText);
+      setDisplayQuestion(
+        canonical.question.content || analysisText || 'Fotoğraftaki soru'
+      );
 
       if (!canonical.instance) {
         setError(

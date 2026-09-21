@@ -41,18 +41,24 @@ export class MockQuestionUnderstandingProvider implements IQuestionUnderstanding
     // Simulate processing latency
     await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
 
-    const hash = this.simpleHash(request.normalizedText);
-    
+    // Phase 7.5: `normalizedText` is optional on the contract (an IMAGE_UPLOAD may
+    // carry the question only as an image). The mock provider is deterministic on
+    // text, so it falls back to a stable seed for an image-only request.
+    const mockText = request.normalizedText ?? '';
+    const hashSeed = mockText.length > 0 ? mockText : request.ingestionId;
+
+    const hash = this.simpleHash(hashSeed);
+
     // Generate deterministic mock proposal
-    const proposal = this.generateMockProposal(request, hash);
+    const proposal = this.generateMockProposal(request, hash, mockText);
     const confidence = this.generateOverallConfidence(hash);
-    const warnings = this.generateMockWarnings(request.normalizedText, hash);
+    const warnings = this.generateMockWarnings(mockText, hash);
 
     const processingTimeMs = Date.now() - startTime;
 
     logger.debug({
       ingestionId: request.ingestionId,
-      textLength: request.normalizedText.length,
+      textLength: mockText.length,
       confidence,
       warningsCount: warnings.length,
       processingTimeMs,
@@ -67,20 +73,29 @@ export class MockQuestionUnderstandingProvider implements IQuestionUnderstanding
 
   private generateMockProposal(
     request: QuestionUnderstandingRequest,
-    hash: number
+    hash: number,
+    mockText: string
   ): QuestionUnderstandingProposal {
-    const questionUnderstanding = this.generateQuestionUnderstanding(request.normalizedText, hash);
     const curriculumCandidates = this.generateCurriculumCandidates(request, hash);
     const microSkillCandidates = this.generateMicroSkillCandidates(request, hash);
 
+    // Phase 7.5: a deterministic "reading" of the image, standing in for the
+    // multimodal provider's transcription. It supplies the text an IMAGE_UPLOAD
+    // would otherwise lack, so the downstream text-based pipeline is unchanged.
+    const readText =
+      mockText.length > 0 ? mockText : this.generateMockTranscription(request.ingestionId);
+
+    const questionUnderstanding = this.generateQuestionUnderstanding(readText, hash);
+
     return {
       ingestionId: request.ingestionId,
-      normalizedText: request.normalizedText,
+      extractedText: readText,
+      normalizedText: readText,
       questionUnderstanding,
       curriculumCandidates,
       microSkillCandidates,
       confidence: this.generateOverallConfidence(hash),
-      warnings: this.generateMockWarnings(request.normalizedText, hash),
+      warnings: this.generateMockWarnings(readText, hash),
       modelMetadata: {
         provider: this.provider,
         model: this.model,
@@ -88,6 +103,20 @@ export class MockQuestionUnderstandingProvider implements IQuestionUnderstanding
         timestamp: new Date().toISOString(),
       },
     };
+  }
+
+  /**
+   * Deterministic stand-in transcription for an image-only request, seeded by the
+   * ingestion id so the same upload always yields the same text.
+   */
+  private generateMockTranscription(seed: string): string {
+    const transcriptions = [
+      '2x + 5 = 15 denklemini çöz.',
+      'x² + 5x + 6 = 0 denkleminin köklerini bulunuz.',
+      'f(x) = 3x² - 2x + 1 fonksiyonun türevini hesaplayınız.',
+      'Bir üçgenin tabanı 8 cm ve yüksekliği 5 cm ise alanını bulunuz.',
+    ];
+    return transcriptions[Math.abs(this.simpleHash(seed)) % transcriptions.length];
   }
 
   private generateQuestionUnderstanding(text: string, hash: number): QuestionUnderstanding {
