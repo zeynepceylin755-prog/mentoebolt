@@ -131,6 +131,9 @@ describe('Phase 7.4 — Gemini provider (Interactions API)', () => {
     // Structured JSON output is requested from the API itself.
     expect(params.response_format.mime_type).toBe('application/json');
     expect(params.response_format.schema.required).toContain('questionUnderstanding');
+    // The transcription is part of the enforced contract so an image request
+    // always yields usable text downstream.
+    expect(params.response_format.schema.required).toContain('extractedText');
     expect(params.generation_config.max_output_tokens).toBe(1024);
     // Single stateless turn.
     expect(params.store).toBe(false);

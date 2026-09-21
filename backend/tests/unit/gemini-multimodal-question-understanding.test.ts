@@ -151,6 +151,10 @@ describe('Phase 7.5 — Gemini multimodal question understanding', () => {
     expect(String(textPart!.text)).toContain('FIELD DISCIPLINE');
     expect(String(textPart!.text)).toContain('"extractedText" MUST contain');
     expect(String(textPart!.text)).toContain('Never put the question text');
+    // The schema enforces the transcription, so the API itself rejects a response
+    // that omits it rather than silently producing an untranscribed image.
+    const params = createMock.mock.calls[0][0] as Record<string, any>;
+    expect(params.response_format.schema.required).toContain('extractedText');
   });
 
   it('3. IMAGE + normalizedText sends multimodal input (image + the extra text)', async () => {

@@ -150,6 +150,7 @@ const RESPONSE_SCHEMA: Record<string, unknown> = {
     warnings: { type: 'array', items: { type: 'string' } },
   },
   required: [
+    'extractedText',
     'questionUnderstanding',
     'curriculumCandidates',
     'microSkillCandidates',
