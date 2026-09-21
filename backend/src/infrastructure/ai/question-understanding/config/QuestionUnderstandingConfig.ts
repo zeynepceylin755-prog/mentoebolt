@@ -52,9 +52,11 @@ export function getQuestionUnderstandingConfig(): QuestionUnderstandingConfig {
 
   const provider = (env.QUESTION_UNDERSTANDING_PROVIDER as QuestionUnderstandingProviderKind) ?? 'mock';
 
-  // Phase 7.4: Use Gemini-specific model when provider is Gemini
-  const model = provider === 'gemini' 
-    ? (env.GEMINI_MODEL || 'gemini-1.5-pro')
+  // Phase 7.4: Use Gemini-specific model when provider is Gemini.
+  // The Interactions API + `gemini-3.6-flash` is the current supported default;
+  // older models such as gemini-2.5-flash are no longer available to new users.
+  const model = provider === 'gemini'
+    ? (env.GEMINI_MODEL || 'gemini-3.6-flash')
     : (env.QUESTION_UNDERSTANDING_MODEL || 'gpt-4o');
 
   return {
