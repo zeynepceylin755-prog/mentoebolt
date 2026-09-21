@@ -66,7 +66,8 @@ const envSchema = z.object({
   // Phase 5F.9-B: Question Understanding provider selection. `mock` is the SAFE
   // DEFAULT so no question text leaves the server unless a real provider is
   // explicitly selected AND external egress is explicitly allowed.
-  QUESTION_UNDERSTANDING_PROVIDER: z.enum(['mock', 'openai']).default('mock'),
+  // Phase 7.4: Added Gemini as an option for question understanding.
+  QUESTION_UNDERSTANDING_PROVIDER: z.enum(['mock', 'openai', 'gemini']).default('mock'),
   QUESTION_UNDERSTANDING_MODEL: z.string().default('gpt-4o'),
   QUESTION_UNDERSTANDING_TIMEOUT_MS: z.string().default('30000'),
   QUESTION_UNDERSTANDING_MAX_RETRIES: z.string().default('2'),
@@ -76,6 +77,9 @@ const envSchema = z.object({
   QUESTION_UNDERSTANDING_MAX_INPUT_CHARS: z.string().default('8000'),
   QUESTION_UNDERSTANDING_BASE_URL: z.string().default('https://api.openai.com/v1'),
   QUESTION_UNDERSTANDING_ALLOW_EXTERNAL_PROVIDER: z.string().default('false'),
+  // Phase 7.4: Gemini API key for question understanding
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
 
   // Phase 5F.9-C: Error Analysis provider selection. `mock` is the SAFE DEFAULT so
   // no student question text or answer leaves the server unless a real provider is

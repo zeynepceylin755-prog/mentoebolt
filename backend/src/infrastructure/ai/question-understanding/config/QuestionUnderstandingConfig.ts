@@ -11,8 +11,9 @@ import { getEnv } from '../../../config/environment.js';
  * - `provider` defaults to `mock`: no question text is sent to an external AI.
  * - `allowExternalProvider` defaults to false, so even selecting a real provider
  *   does not silently enable data egress.
+ * Phase 7.4: Added Gemini support as an alternative to OpenAI.
  */
-export type QuestionUnderstandingProviderKind = 'mock' | 'openai';
+export type QuestionUnderstandingProviderKind = 'mock' | 'openai' | 'gemini';
 
 export interface QuestionUnderstandingConfig {
   provider: QuestionUnderstandingProviderKind;
@@ -28,10 +29,12 @@ export interface QuestionUnderstandingConfig {
   maxInputChars: number;
   /** Explicit gate for sending student question text to an external provider. */
   allowExternalProvider: boolean;
-  /** API base URL for the real provider. */
+  /** API base URL for the real provider (OpenAI only). */
   baseUrl: string;
   /** API key for the real provider. Never logged. */
   apiKey: string;
+  /** Phase 7.4: Gemini-specific API key. Never logged. */
+  geminiApiKey: string;
 }
 
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -47,9 +50,16 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 export function getQuestionUnderstandingConfig(): QuestionUnderstandingConfig {
   const env = getEnv();
 
+  const provider = (env.QUESTION_UNDERSTANDING_PROVIDER as QuestionUnderstandingProviderKind) ?? 'mock';
+
+  // Phase 7.4: Use Gemini-specific model when provider is Gemini
+  const model = provider === 'gemini' 
+    ? (env.GEMINI_MODEL || 'gemini-1.5-flash')
+    : (env.QUESTION_UNDERSTANDING_MODEL || 'gpt-4o');
+
   return {
-    provider: (env.QUESTION_UNDERSTANDING_PROVIDER as QuestionUnderstandingProviderKind) ?? 'mock',
-    model: env.QUESTION_UNDERSTANDING_MODEL,
+    provider,
+    model,
     timeoutMs: parsePositiveInt(env.QUESTION_UNDERSTANDING_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
     maxRetries: parsePositiveInt(env.QUESTION_UNDERSTANDING_MAX_RETRIES, DEFAULT_MAX_RETRIES),
     maxTokens: parsePositiveInt(env.QUESTION_UNDERSTANDING_MAX_TOKENS, DEFAULT_MAX_TOKENS),
@@ -62,5 +72,7 @@ export function getQuestionUnderstandingConfig(): QuestionUnderstandingConfig {
     // Phase 7.1: env-overridable, defaulting to the OpenAI convention.
     baseUrl: env.QUESTION_UNDERSTANDING_BASE_URL || 'https://api.openai.com/v1',
     apiKey: env.OPENAI_API_KEY || '',
+    // Phase 7.4: Gemini API key
+    geminiApiKey: env.GEMINI_API_KEY || '',
   };
 }

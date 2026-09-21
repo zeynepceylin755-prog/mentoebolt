@@ -5,6 +5,7 @@ import {
   RealQuestionUnderstandingProvider,
   type RealQuestionUnderstandingProviderOptions,
 } from './RealQuestionUnderstandingProvider.js';
+import { GeminiQuestionUnderstandingProvider } from './GeminiQuestionUnderstandingProvider.js';
 import {
   getQuestionUnderstandingConfig,
   type QuestionUnderstandingConfig,
@@ -18,6 +19,7 @@ import { logger } from '../../logging/logger.js';
  * injected once at bootstrap. It does NOT silently substitute mock for a
  * misconfigured real provider — that would let production appear to work while
  * using fake AI. Misconfiguration FAILS FAST.
+ * Phase 7.4: Added Gemini support as an alternative to OpenAI.
  */
 export function createQuestionUnderstandingProvider(
   options: RealQuestionUnderstandingProviderOptions = {}
@@ -54,6 +56,28 @@ export function createQuestionUnderstandingProviderFromConfig(
         'Real question understanding provider enabled (external data egress allowed)'
       );
       return new RealQuestionUnderstandingProvider(config, options);
+    }
+
+    case 'gemini': {
+      // Explicit data-egress gate: question text must not leave the server just
+      // because a real provider was selected.
+      if (!config.allowExternalProvider) {
+        throw new AiAnalysisError(
+          'QUESTION_UNDERSTANDING_PROVIDER=gemini requires ' +
+          'QUESTION_UNDERSTANDING_ALLOW_EXTERNAL_PROVIDER=true ' +
+          '(question text would be sent to an external service)'
+        );
+      }
+      if (!config.geminiApiKey || config.geminiApiKey.trim().length === 0) {
+        throw new AiAnalysisError(
+          'QUESTION_UNDERSTANDING_PROVIDER=gemini requires GEMINI_API_KEY to be configured'
+        );
+      }
+      logger.info(
+        { provider: config.provider, model: config.model, timeoutMs: config.timeoutMs },
+        'Gemini question understanding provider enabled (external data egress allowed)'
+      );
+      return new GeminiQuestionUnderstandingProvider(config);
     }
 
     default:
