@@ -117,13 +117,33 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
       const response = result.response;
       const text = response.text();
 
-      // Parse JSON response
-      const jsonResponse = JSON.parse(text);
+      // Validate that we got a non-empty response
+      if (!text || text.trim().length === 0) {
+        throw new AiAnalysisError('Gemini returned empty response');
+      }
+
+      // Parse JSON response with validation
+      let jsonResponse: any;
+      try {
+        jsonResponse = JSON.parse(text);
+      } catch (parseError) {
+        throw new AiAnalysisError(
+          `Failed to parse Gemini response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+        );
+      }
+
+      // Validate structured response schema
+      this.validateGeminiResponse(jsonResponse);
 
       // Build proposal from Gemini response
       const proposal = this.buildProposal(request, jsonResponse);
       const confidence = this.extractConfidence(jsonResponse);
       const warnings = this.extractWarnings(jsonResponse);
+
+      // Validate confidence range
+      if (typeof confidence !== 'number' || confidence < 0 || confidence > 1) {
+        throw new AiAnalysisError('Gemini returned invalid confidence value (must be 0-1)');
+      }
 
       const processingTimeMs = Date.now() - startedAt;
 
@@ -147,9 +167,47 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
         error: error instanceof Error ? error.message : String(error),
       }, 'Gemini question understanding analysis failed');
 
+      // Never fall back to mock - propagate the error
       throw new AiAnalysisError(
         `Gemini analysis failed: ${error instanceof Error ? error.message : String(error)}`
       );
+    }
+  }
+
+  private validateGeminiResponse(jsonResponse: any): void {
+    if (typeof jsonResponse !== 'object' || jsonResponse === null) {
+      throw new AiAnalysisError('Gemini response is not a valid object');
+    }
+
+    // Validate required top-level fields
+    if (!jsonResponse.questionUnderstanding || typeof jsonResponse.questionUnderstanding !== 'object') {
+      throw new AiAnalysisError('Gemini response missing questionUnderstanding field');
+    }
+
+    if (typeof jsonResponse.confidence !== 'number') {
+      throw new AiAnalysisError('Gemini response missing or invalid confidence field');
+    }
+
+    if (!Array.isArray(jsonResponse.warnings)) {
+      throw new AiAnalysisError('Gemini response missing or invalid warnings field');
+    }
+
+    if (!Array.isArray(jsonResponse.curriculumCandidates)) {
+      throw new AiAnalysisError('Gemini response missing or invalid curriculumCandidates field');
+    }
+
+    if (!Array.isArray(jsonResponse.microSkillCandidates)) {
+      throw new AiAnalysisError('Gemini response missing or invalid microSkillCandidates field');
+    }
+
+    // Validate questionUnderstanding structure
+    const qu = jsonResponse.questionUnderstanding;
+    if (typeof qu.questionType !== 'string' || qu.questionType.trim().length === 0) {
+      throw new AiAnalysisError('Gemini response missing or invalid questionType');
+    }
+
+    if (!Array.isArray(qu.mathematicalObjects)) {
+      throw new AiAnalysisError('Gemini response missing or invalid mathematicalObjects');
     }
   }
 

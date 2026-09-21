@@ -54,7 +54,7 @@ export function getQuestionUnderstandingConfig(): QuestionUnderstandingConfig {
 
   // Phase 7.4: Use Gemini-specific model when provider is Gemini
   const model = provider === 'gemini' 
-    ? (env.GEMINI_MODEL || 'gemini-1.5-flash')
+    ? (env.GEMINI_MODEL || 'gemini-1.5-pro')
     : (env.QUESTION_UNDERSTANDING_MODEL || 'gpt-4o');
 
   return {

@@ -79,7 +79,7 @@ const envSchema = z.object({
   QUESTION_UNDERSTANDING_ALLOW_EXTERNAL_PROVIDER: z.string().default('false'),
   // Phase 7.4: Gemini API key for question understanding
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-1.5-pro'),
 
   // Phase 5F.9-C: Error Analysis provider selection. `mock` is the SAFE DEFAULT so
   // no student question text or answer leaves the server unless a real provider is

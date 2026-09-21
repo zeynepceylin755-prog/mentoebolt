@@ -69,6 +69,10 @@ export function createQuestionUnderstandingProviderFromConfig(
         );
       }
       if (!config.geminiApiKey || config.geminiApiKey.trim().length === 0) {
+        logger.error(
+          { provider: config.provider },
+          'Gemini provider is configured but GEMINI_API_KEY is missing'
+        );
         throw new AiAnalysisError(
           'QUESTION_UNDERSTANDING_PROVIDER=gemini requires GEMINI_API_KEY to be configured'
         );
