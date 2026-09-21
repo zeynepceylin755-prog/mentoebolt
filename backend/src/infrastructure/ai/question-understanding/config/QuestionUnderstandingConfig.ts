@@ -39,11 +39,12 @@ export interface QuestionUnderstandingConfig {
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_RETRIES = 2;
-// Phase 7.5: an IMAGE_UPLOAD now also asks the model for a verbatim transcription
-// of the question, so the response (transcription + analysis + warnings) is longer
-// than the classify-only text response was. 1024 was enough to be truncated on
-// some responses, which surfaced as "Unterminated string in JSON".
-const DEFAULT_MAX_TOKENS = 4096;
+// Phase 7.5: this model spends part of `max_output_tokens` on INTERNAL THINKING
+// before it emits any JSON (a production image call reported 420 thought tokens
+// against a 109-token answer). The budget therefore has to cover the reasoning
+// plus the whole response — transcription, analysis and warnings — or the JSON is
+// cut off mid-string and surfaces as "Unterminated string in JSON".
+const DEFAULT_MAX_TOKENS = 8192;
 const DEFAULT_MAX_INPUT_CHARS = 8000;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
