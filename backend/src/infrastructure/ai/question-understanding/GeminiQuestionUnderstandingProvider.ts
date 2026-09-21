@@ -216,8 +216,12 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
       try {
         jsonResponse = JSON.parse(text);
       } catch (parseError) {
+        // A truncated response is the common cause: report that explicitly rather
+        // than a bare parse error, since it points at the output-token budget.
+        const truncated = !text.trimEnd().endsWith('}');
         throw new AiAnalysisError(
-          `Failed to parse Gemini response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+          `Failed to parse Gemini response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}` +
+          (truncated ? ' (response appears truncated — check the output token budget)' : '')
         );
       }
 

@@ -39,7 +39,11 @@ export interface QuestionUnderstandingConfig {
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_RETRIES = 2;
-const DEFAULT_MAX_TOKENS = 1024;
+// Phase 7.5: an IMAGE_UPLOAD now also asks the model for a verbatim transcription
+// of the question, so the response (transcription + analysis + warnings) is longer
+// than the classify-only text response was. 1024 was enough to be truncated on
+// some responses, which surfaced as "Unterminated string in JSON".
+const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_MAX_INPUT_CHARS = 8000;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
