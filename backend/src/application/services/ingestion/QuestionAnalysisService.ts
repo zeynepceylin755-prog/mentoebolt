@@ -411,16 +411,26 @@ export class QuestionAnalysisService {
         warnings.push(...aiResponse.warnings);
 
         // An image-only question has no text yet. The multimodal provider is the
-        // reader of the image, so its reading (the proposal's `extractedText` /
-        // `normalizedText`) becomes the ingestion's text from here on. This keeps
-        // every downstream step — validation, canonicalization, curriculum
-        // mapping, mastery — operating on text exactly as it does for TEXT_PASTE.
+        // reader of the image, so its transcription (`extractedText`) becomes the
+        // ingestion's text from here on. This keeps every downstream step —
+        // validation, canonicalization, curriculum mapping, mastery — operating on
+        // text exactly as it does for TEXT_PASTE.
+        //
+        // A summary is NOT an acceptable substitute: canonical question content
+        // must be the question itself. When the model read the image but did not
+        // transcribe it, say so with a warning instead of quietly storing prose.
         if (!normalizedText) {
-          const readText = (
-            aiProposal?.extractedText ??
-            aiProposal?.normalizedText ??
-            ''
-          ).trim();
+          const transcription = (aiProposal?.extractedText ?? '').trim();
+          const fallbackText = (aiProposal?.normalizedText ?? '').trim();
+          const readText = transcription.length > 0 ? transcription : fallbackText;
+
+          if (transcription.length === 0) {
+            warnings.push(
+              'The image was analysed but no verbatim transcription was returned; ' +
+              'the question text may be a summary rather than the original wording.'
+            );
+          }
+
           if (readText.length > 0) {
             normalizedText = readText;
             await tx.questionIngestion.update({

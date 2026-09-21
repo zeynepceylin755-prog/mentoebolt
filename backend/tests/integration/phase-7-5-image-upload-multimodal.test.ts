@@ -150,6 +150,71 @@ describe('Phase 7.5 — IMAGE_UPLOAD multimodal analysis chain', () => {
     expect(JSON.stringify(parts)).not.toContain('local://p75-photo.png');
   });
 
+  it('warns when the model read the image but returned no verbatim transcription', async () => {
+    const { prisma } = await import('../setup.js');
+
+    // A response with NO extractedText: the model summarised instead of
+    // transcribing. The analysis must still succeed, but it must SAY so rather
+    // than silently storing prose as the question text.
+    createMock.mockResolvedValue({
+      id: 'int-2',
+      status: 'completed',
+      output_text: JSON.stringify({
+        questionUnderstanding: {
+          questionType: 'EQUATION_SOLVING',
+          mathematicalObjects: ['quadratic equation'],
+          requestedOperation: 'solve',
+          constraints: [],
+        },
+        curriculumCandidates: [],
+        microSkillCandidates: [],
+        confidence: 0.8,
+        warnings: [],
+      }),
+      steps: [],
+    });
+
+    const storage = new FakeStorage();
+    const aiProvider = new GeminiQuestionUnderstandingProvider(makeConfig(), storage);
+    const ingestionService = new QuestionIngestionService(prisma as any);
+    const analysisService = new QuestionAnalysisService(
+      prisma as any,
+      undefined,
+      undefined,
+      aiProvider,
+      new QuestionNormalizationService(),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      storage as any
+    );
+
+    const user = await prisma.user.create({
+      data: {
+        email: `p75-notrans-${Date.now()}@example.com`,
+        firstName: 'P75',
+        lastName: 'NoTrans',
+        role: 'STUDENT',
+        passwordHash: 'h',
+      },
+    });
+    await prisma.studentProfile.create({ data: { userId: user.id, grade: 11 } });
+
+    const ingestion = await ingestionService.createIngestion(user.id, {
+      ingestMethod: 'IMAGE_UPLOAD',
+      originalAssetRef: 'local://p75-notrans.png',
+      originalAssetMimeType: 'image/png',
+    });
+
+    const result = await analysisService.analyzeIngestion(ingestion.id, user.id, 'STUDENT', {});
+
+    // The image was still analysed (the model read it)…
+    expect(createMock).toHaveBeenCalledTimes(1);
+    // …but the missing transcription is surfaced, not hidden.
+    expect(result.warnings.join(' ')).toContain('no verbatim transcription');
+  });
+
   it('TEXT_PASTE still requires normalizedText (legacy behaviour preserved)', async () => {
     const { prisma } = await import('../setup.js');
 
