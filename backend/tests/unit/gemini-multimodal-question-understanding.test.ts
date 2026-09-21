@@ -146,6 +146,11 @@ describe('Phase 7.5 — Gemini multimodal question understanding', () => {
     // The image instruction is present so the model reads the question from the image.
     expect(String(textPart!.text)).toContain('An image of a mathematics question is attached');
     expect(String(textPart!.text)).toContain('Do NOT solve the question');
+    // Field discipline: the transcription belongs in extractedText, and the
+    // operation label must not absorb the question text.
+    expect(String(textPart!.text)).toContain('FIELD DISCIPLINE');
+    expect(String(textPart!.text)).toContain('"extractedText" MUST contain');
+    expect(String(textPart!.text)).toContain('Never put the question text');
   });
 
   it('3. IMAGE + normalizedText sends multimodal input (image + the extra text)', async () => {

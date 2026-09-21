@@ -67,7 +67,11 @@ Read the question directly from the image: equations, expressions, tables, graph
 Interpret the mathematical notation as accurately as you can (fractions, exponents, radicals, inequalities, matrices, subscripts/superscripts).
 If a symbol is genuinely ambiguous in the image, do NOT silently pick an interpretation: lower your confidence and add a warning.
 Do NOT solve the question and do NOT produce an answer — produce only the structured question-understanding analysis defined by the response contract.
-All rules above still apply: never invent curriculum or MicroSkill identifiers, and if no CURRICULUM CONTEXT is provided, return NO curriculum or MicroSkill candidates.`;
+All rules above still apply: never invent curriculum or MicroSkill identifiers, and if no CURRICULUM CONTEXT is provided, return NO curriculum or MicroSkill candidates.
+
+FIELD DISCIPLINE (required):
+- "extractedText" MUST contain your faithful transcription of the question as it appears in the image, nothing else. Include every part, preserve the notation, and do NOT add reasoning, commentary, answers or field labels.
+- "questionUnderstanding.requestedOperation" MUST be a short operation label only (e.g. "solve", "evaluate", "find the roots", "compute the derivative"). Never put the question text, the equation or an answer in this field.`;
 
 const SYSTEM_PROMPT = `You are a mathematics education analyst for an 11th-grade curriculum.
 You CLASSIFY a question for a learning path. You do NOT solve it and you are NOT an answer authority.
