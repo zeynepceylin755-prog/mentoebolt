@@ -43,9 +43,16 @@ const recommendation: NextRecommendation = {
   estimatedTimeMinutes: 10,
 };
 
-/** Seed localStorage with a decodable, non-authoritative access token. */
+/**
+ * Seed localStorage with a decodable, non-authoritative access token.
+ *
+ * A real token always carries an `exp`; the session-restore path rejects an
+ * expired or expiry-less token (it refreshes instead), so the fixture must look
+ * like a live token for these app-level flows to exercise a signed-in session.
+ */
 function seedSession() {
-  const payload = btoa(JSON.stringify({ userId: 'u-1', email: 'ayse@example.com', role: 'STUDENT' }));
+  const exp = Math.floor(Date.now() / 1000) + 3600;
+  const payload = btoa(JSON.stringify({ userId: 'u-1', email: 'ayse@example.com', role: 'STUDENT', exp }));
   const token = `header.${payload}.signature`;
   localStorage.setItem('access_token', token);
   localStorage.setItem('refresh_token', 'refresh-token');

@@ -96,6 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Only display claims are read here — never a secret, and never a claim used
    * for an authorization decision (the backend re-derives identity on every
    * request, so a tampered local token grants nothing).
+   *
+   * An EXPIRED token returns null. Without this check a page reload would
+   * "restore" a session from a token the backend will reject, and the app would
+   * render as signed-in while every request carried a stale bearer token (the
+   * cold-load 401s on /question-attempts, /recommendations/next and
+   * /analytics/me/skills). Returning null routes the caller through the existing
+   * refresh path instead.
    */
   function parseAccessToken(token: string): { userId: string; email: string; role: string } | null {
     try {
@@ -107,6 +114,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof decoded?.userId !== 'string') {
         return null;
       }
+
+      // Reject a token that is already expired (or has no usable expiry).
+      // A small skew keeps a token that expires mid-flight from being treated as
+      // still valid locally.
+      if (typeof decoded?.exp !== 'number') {
+        return null;
+      }
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      if (decoded.exp <= nowSeconds) {
+        return null;
+      }
+
       return {
         userId: decoded.userId,
         email: typeof decoded.email === 'string' ? decoded.email : '',
