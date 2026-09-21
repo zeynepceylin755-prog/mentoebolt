@@ -130,8 +130,8 @@ describe('Phase 7.5 — Gemini multimodal question understanding', () => {
     expect(Array.isArray(input)).toBe(true);
 
     const parts = input as Array<Record<string, unknown>>;
-    const textPart = parts.find((p) => p.type === 'input_text');
-    const imagePart = parts.find((p) => p.type === 'input_image');
+    const textPart = parts.find((p) => p.type === 'text');
+    const imagePart = parts.find((p) => p.type === 'image');
 
     expect(textPart).toBeDefined();
     expect(imagePart).toBeDefined();
@@ -160,8 +160,8 @@ describe('Phase 7.5 — Gemini multimodal question understanding', () => {
     });
 
     const parts = recordedInput() as Array<Record<string, unknown>>;
-    const textPart = parts.find((p) => p.type === 'input_text');
-    const imagePart = parts.find((p) => p.type === 'input_image');
+    const textPart = parts.find((p) => p.type === 'text');
+    const imagePart = parts.find((p) => p.type === 'image');
 
     expect(imagePart).toBeDefined();
     // Both the image AND the student's text are carried.

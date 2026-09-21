@@ -142,7 +142,7 @@ describe('Phase 7.5 — IMAGE_UPLOAD multimodal analysis chain', () => {
     const params = createMock.mock.calls[0][0] as Record<string, unknown>;
     const parts = params.input as Array<Record<string, unknown>>;
     expect(Array.isArray(parts)).toBe(true);
-    const imagePart = parts.find((p) => p.type === 'input_image');
+    const imagePart = parts.find((p) => p.type === 'image');
     expect(imagePart).toBeDefined();
     expect(imagePart!.data).toBe(PNG_BYTES.toString('base64'));
     expect(imagePart!.mime_type).toBe('image/png');

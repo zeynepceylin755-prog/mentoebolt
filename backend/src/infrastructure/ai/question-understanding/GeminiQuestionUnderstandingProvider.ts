@@ -401,9 +401,9 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
     }
 
     return [
-      { type: 'input_text', text: `${prompt}\n\n${IMAGE_INSTRUCTION}` },
+      { type: 'text', text: `${prompt}\n\n${IMAGE_INSTRUCTION}` },
       {
-        type: 'input_image',
+        type: 'image',
         // The raw bytes of the uploaded image reach the API here. The opaque
         // assetRef is intentionally NOT part of the payload.
         data: toBase64(request.image.data),
