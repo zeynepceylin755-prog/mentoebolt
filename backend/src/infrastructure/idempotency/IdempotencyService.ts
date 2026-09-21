@@ -3,6 +3,19 @@ import { createHash } from 'crypto';
 import { ConflictError } from '../../domain/errors/ConflictError.js';
 
 export class IdempotencyService {
+  /**
+   * Prisma interactive-transaction timeout for idempotent operations.
+   *
+   * Some idempotent callbacks (e.g. question analysis) perform EXTERNAL provider
+   * calls, so the Prisma default of 5s is not enough for a real network round
+   * trip. Never shorter than the Prisma default.
+   */
+  private static readonly TRANSACTION_TIMEOUT_MS = Math.max(
+    30000,
+    Number(process.env.QUESTION_UNDERSTANDING_TIMEOUT_MS) || 0,
+    Number(process.env.OCR_TIMEOUT_MS) || 0
+  );
+
   constructor(private readonly prisma: PrismaClient) {}
 
   async execute<T>(
@@ -39,7 +52,7 @@ export class IdempotencyService {
         }
 
         return this.executeClaimed(tx, userId, operation, key, callback);
-      });
+      }, { timeout: IdempotencyService.TRANSACTION_TIMEOUT_MS });
     } catch (error) {
       if (!duplicateClaim || !this.isUniqueConstraintError(error)) {
         throw error;
@@ -110,7 +123,7 @@ export class IdempotencyService {
       }
 
       return this.executeClaimed(tx, userId, operation, key, callback);
-    });
+    }, { timeout: IdempotencyService.TRANSACTION_TIMEOUT_MS });
   }
 
   private async executeClaimed<T>(

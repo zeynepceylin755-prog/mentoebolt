@@ -27,6 +27,21 @@ import { requiresReview } from '../../../domain/ingestion/confidencePolicy.js';
 import { NotFoundError } from '../../../domain/errors/NotFoundError.js';
 import { ValidationError } from '../../../domain/errors/ValidationError.js';
 
+/**
+ * Prisma interactive-transaction timeout for the analysis transaction.
+ *
+ * Unlike the Prisma default (5s), this transaction performs EXTERNAL provider
+ * calls (OCR and/or the question-understanding AI), which routinely take longer
+ * than 5 seconds on a real network round trip. The value is derived from the
+ * configured provider timeout so a single knob bounds both, with a floor equal
+ * to the previous default behaviour.
+ */
+const ANALYSIS_TRANSACTION_TIMEOUT_MS = Math.max(
+  30000,
+  Number(process.env.QUESTION_UNDERSTANDING_TIMEOUT_MS) || 0,
+  Number(process.env.OCR_TIMEOUT_MS) || 0
+);
+
 export const ANALYSIS_AUDIT_ACTIONS = {
   QUESTION_AI_ANALYZED: 'QUESTION_AI_ANALYZED',
   QUESTION_AI_REVIEW_REQUIRED: 'QUESTION_AI_REVIEW_REQUIRED',
@@ -134,6 +149,10 @@ export class QuestionAnalysisService {
     const run = async (tx: any): Promise<InternalAnalysisResult> =>
       this.performAnalysis(tx, ingestionId, actorUserId, actorRole, dto);
 
+    // The analysis transaction contains an EXTERNAL provider call (OCR and/or
+    // the question-understanding AI), so the Prisma default 5s interactive
+    // timeout is too short for a real network round trip. The bound is derived
+    // from the configured provider timeout and never shortens the default.
     const internal: InternalAnalysisResult = this.idempotencyService && idempotencyKey
       ? await this.idempotencyService.execute(
           actorUserId,
@@ -142,7 +161,7 @@ export class QuestionAnalysisService {
           { ingestionId, skipOcr: dto.skipOcr },
           run
         )
-      : await this.prisma.$transaction(run);
+      : await this.prisma.$transaction(run, { timeout: ANALYSIS_TRANSACTION_TIMEOUT_MS });
 
     return this.applyProposalAfterAnalysis(internal, actorUserId, actorRole, idempotencyKey);
   }
