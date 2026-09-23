@@ -85,9 +85,18 @@ function isProviderUnavailable(error: unknown): boolean {
   }
   const name = error instanceof Error ? error.name : '';
   const message = error instanceof Error ? error.message : String(error);
-  const haystack = `${name} ${message}`;
-  return /ratelimit|resource_exhausted|resourceexhausted|quota|429|503|overloaded|unavailable|temporar/i.test(
-    haystack
+  const haystack = `${name} ${message}`.toLowerCase();
+  return (
+    haystack.includes('rate limit') ||
+    haystack.includes('ratelimit') ||
+    haystack.includes('resource_exhausted') ||
+    haystack.includes('resourceexhausted') ||
+    haystack.includes('quota') ||
+    haystack.includes('429') ||
+    haystack.includes('503') ||
+    haystack.includes('overloaded') ||
+    haystack.includes('unavailable') ||
+    haystack.includes('temporar')
   );
 }
 
@@ -547,7 +556,10 @@ export class QuestionAnalysisService {
             'The question analysis service is busy right now. Please try again shortly.'
           );
         }
-        throw new AiAnalysisError(`AI analysis failed: ${error instanceof Error ? error.message : String(error)}`);
+        // Any other provider failure: the real reason is already logged by the
+        // provider (above) and by writeAudit; the client only ever sees a generic,
+        // non-technical message. Raw provider text is NEVER forwarded.
+        throw new AiAnalysisError('Question analysis could not be completed');
       }
     }
 

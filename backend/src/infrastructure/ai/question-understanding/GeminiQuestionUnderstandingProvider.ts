@@ -319,10 +319,25 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
         error: error instanceof Error ? error.message : String(error),
       }, 'Gemini question understanding analysis failed');
 
-      // Never fall back to mock - propagate the error
-      throw new AiAnalysisError(
-        `Gemini analysis failed: ${error instanceof Error ? error.message : String(error)}`
+      // Never fall back to mock - propagate a PROVIDER-GENERIC error. The raw
+      // provider text (which can include the API key's quota diagnostics) is
+      // already in the server logs above and must never reach a client.
+      //
+      // A transient/unavailable provider remains classifiable through the
+      // preserved error NAME and a fixed, non-sensitive marker, so the analysis
+      // layer reports it as retryable without ever echoing provider text.
+      const unavailable = isTransientProviderError(error);
+      const wrapped = new AiAnalysisError(
+        unavailable
+          ? 'Question understanding provider is temporarily unavailable'
+          : 'Gemini question understanding failed'
       );
+      wrapped.name = unavailable
+        ? 'ProviderUnavailableError'
+        : error instanceof Error
+          ? error.name
+          : 'AiAnalysisError';
+      throw wrapped;
     }
   }
 
