@@ -44,7 +44,9 @@ async function main() {
   let inserted = 0
   let updated = 0
 
-  // Use transaction for atomic import
+  // Use transaction for atomic import. The interactive timeout is raised because
+  // the import can run over a high-latency connection, where the Prisma default
+  // of 5s is too short and the transaction is torn down mid-import.
   await prisma.$transaction(async (tx) => {
     for (const microSkillData of jsonData.microSkills) {
       // Parse the process component code to find the matching ProcessComponent
@@ -120,7 +122,7 @@ async function main() {
         inserted++
       }
     }
-  })
+  }, { timeout: 120000, maxWait: 30000 })
 
   // Final count
   const finalCount = await prisma.microSkill.count()

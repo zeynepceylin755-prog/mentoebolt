@@ -67,6 +67,8 @@ async function main() {
   let mappingsUpdated = 0
 
   // ---- TRANSACTION: only ErrorPattern + ErrorPatternMicroSkill are touched ----
+  // The interactive timeout is raised because the import can run over a high-
+  // latency connection, where the Prisma default of 5s is too short.
   await prisma.$transaction(async (tx) => {
     for (const pattern of jsonData.errorPatterns) {
       const existing = await tx.errorPattern.findUnique({ where: { code: pattern.code } })
@@ -137,7 +139,7 @@ async function main() {
         }
       }
     }
-  })
+  }, { timeout: 120000, maxWait: 30000 })
 
   // ---- FINAL COUNTS ----
   const finalErrorPatternCount = await prisma.errorPattern.count()

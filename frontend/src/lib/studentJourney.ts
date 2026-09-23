@@ -332,6 +332,10 @@ export function analyzeIngestion(
 
   return apiRequest(`/question-ingestions/${ingestionId}/analyze`, {
     method: 'POST',
+    // A stable, per-ingestion key: an accidental double submission of the same
+    // analysis returns the already-computed result instead of running the
+    // (expensive, externally rate-limited) AI call twice.
+    idempotencyKey: `p5f7-analyze-${ingestionId}`,
     body,
   });
 }

@@ -499,6 +499,34 @@ describe('Question Ingestion Service - Phase 5B', () => {
 
   // ============================================== PURE RULE UNIT CHECKS (20-22)
 
+  it('19b. a student-owned, source-less ingestion (null origin) at REVIEW_REQUIRED yields a canonical Question', async () => {
+    // This is the exact student journey path: createIngestion is called with no
+    // sourceId, so origin is null. It must still be treated as a non auto-
+    // promotable student upload, otherwise the produced question is UNVERIFIED and
+    // inactive as designed, and the frontend result screen can never render.
+    const user = await createUser('tx19b@example.com');
+    const created = await service.createIngestion(user.id, {
+      ingestMethod: 'TEXT_PASTE',
+      rawText: '2x + 5 = 15 denklemini çöz.',
+      normalizedText: '2x + 5 = 15 denklemini çöz.',
+    });
+
+    await driveTo(created.id, 'REVIEW_REQUIRED', user.id, 'STUDENT');
+
+    const result = await service.createCanonicalQuestionFromIngestion(
+      created.id,
+      user.id,
+      'STUDENT'
+    );
+
+    expect(result.question.id).toBeTruthy();
+    // Student content is never auto-promoted: UNVERIFIED and inactive.
+    const stored = await prisma.question.findUnique({ where: { id: result.question.id } });
+    expect(stored?.trust).toBe('UNVERIFIED');
+    expect(stored?.isActive).toBe(false);
+    expect(await prisma.questionInstance.count()).toBe(1);
+  });
+
   it('20. state machine rules are pure and deterministic', async () => {
     expect(canTransition('INGESTED', 'EXTRACTED')).toBe(true);
     expect(canTransition('EXTRACTED', 'NORMALIZED')).toBe(true);

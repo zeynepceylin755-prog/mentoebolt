@@ -44,7 +44,12 @@ const DEFAULT_MAX_RETRIES = 2;
 // against a 109-token answer). The budget therefore has to cover the reasoning
 // plus the whole response — transcription, analysis and warnings — or the JSON is
 // cut off mid-string and surfaces as "Unterminated string in JSON".
-const DEFAULT_MAX_TOKENS = 8192;
+//
+// Phase 7.6: raised from 8192 to 16384 after a production TEXT analysis was still
+// truncated at ~2600 characters while the model also produced a long
+// `requestedOperation` string. The budget is bounded (never unbounded) and is
+// still overridable through QUESTION_UNDERSTANDING_MAX_TOKENS.
+const DEFAULT_MAX_TOKENS = 16384;
 const DEFAULT_MAX_INPUT_CHARS = 8000;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {

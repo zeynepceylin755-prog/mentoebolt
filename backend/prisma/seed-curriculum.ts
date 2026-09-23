@@ -56,11 +56,14 @@ async function main() {
     console.log('⚠️  Import will be idempotent - only import if not exists')
   }
 
-  // Use transaction for atomic import
+  // Use transaction for atomic import. The interactive timeout is raised because
+  // the import can run over a high-latency connection (e.g. a managed database
+  // reached through a proxy), where the Prisma default of 5s is too short and the
+  // transaction is torn down mid-import.
   await prisma.$transaction(async (tx) => {
     // Create or get CurriculumVersion
     const curriculumVersionCode = `MEB-${jsonData.source.grade}-${jsonData.source.subject}-${jsonData.source.updateDate}`
-    
+
     const existingVersion = await tx.curriculumVersion.findUnique({
       where: { code: curriculumVersionCode }
     })
@@ -185,7 +188,7 @@ async function main() {
     console.log(`   Themes created: ${totalThemes}`)
     console.log(`   Learning outcomes created: ${totalOutcomes}`)
     console.log(`   Process components created: ${totalComponents}`)
-  })
+  }, { timeout: 120000, maxWait: 30000 })
 
   // Validation after import
   const finalVersions = await prisma.curriculumVersion.count()

@@ -62,6 +62,53 @@ function toBase64(data: Buffer): string {
   return Buffer.isBuffer(data) ? data.toString('base64') : Buffer.from(data ?? []).toString('base64');
 }
 
+/** Bounded sleep used between retry attempts. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * True only for failures worth retrying: rate limiting (429), server errors
+ * (5xx) and network-level failures. A contract violation or a 4xx request error
+ * is NOT retried — retrying it would just repeat the same rejection.
+ *
+ * Detection is name/status based and never inspects or logs message content that
+ * could contain sensitive data.
+ */
+function isTransientProviderError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const name = (error as { name?: string }).name ?? '';
+  if (/ratelimit|timeout|abort|unavailable|resourceexhausted|internalserver/i.test(name)) {
+    return true;
+  }
+  const status = (error as { status?: number; statusCode?: number }).status ??
+    (error as { statusCode?: number }).statusCode;
+  if (typeof status === 'number') {
+    return status === 429 || (status >= 500 && status < 600);
+  }
+  return false;
+}
+
+/**
+ * Exponential backoff with a small bounded cap. The provider's own 429 response
+ * suggests a retry delay; when present it is honoured (capped) so a per-day free
+ * tier limit is not hammered, otherwise a short backoff is used.
+ */
+function retryDelayMs(error: unknown, attempt: number): number {
+  const MAX_DELAY_MS = 8000;
+  const message = error instanceof Error ? error.message : '';
+  const match = /retry in (\d+)s/i.exec(message);
+  if (match) {
+    const suggested = Number(match[1]) * 1000;
+    if (Number.isFinite(suggested) && suggested > 0) {
+      return Math.min(suggested, MAX_DELAY_MS);
+    }
+  }
+  return Math.min(500 * 2 ** (attempt - 1), MAX_DELAY_MS);
+}
+
 const IMAGE_INSTRUCTION = `An image of a mathematics question is attached.
 Read the question directly from the image: equations, expressions, tables, graphs, geometric figures and any accompanying text.
 Interpret the mathematical notation as accurately as you can (fractions, exponents, radicals, inequalities, matrices, subscripts/superscripts).
@@ -287,25 +334,54 @@ export class GeminiQuestionUnderstandingProvider implements IQuestionUnderstandi
    * which converts them into an explicit AiAnalysisError (never a mock result).
    */
   private async callGemini(request: QuestionUnderstandingRequest): Promise<Interactions.Interaction> {
-    return this.client.interactions.create({
-      model: this.config.model,
-      input: this.buildInput(request),
-      system_instruction: SYSTEM_PROMPT,
-      generation_config: {
-        // NOTE: the Interactions API GenerationConfig has no `temperature`; the
-        // schema below + a system prompt that forbids invention keep the output
-        // deterministic and classify-only.
-        max_output_tokens: this.config.maxTokens,
-      },
-      // Structured JSON output enforced by the API rather than prompt-only.
-      response_format: {
-        type: 'text',
-        mime_type: 'application/json',
-        schema: RESPONSE_SCHEMA,
-      },
-      // Stateless single turn: nothing is retained server-side.
-      store: false,
-    });
+    // Bounded retry for TRANSIENT provider failures only (rate limit / 5xx /
+    // network). The count comes from QUESTION_UNDERSTANDING_MAX_RETRIES via the
+    // config layer, so it is never unbounded. A non-transient failure (bad
+    // request, contract violation) is thrown immediately.
+    const maxAttempts = Math.max(1, (this.config.maxRetries ?? 0) + 1);
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await this.client.interactions.create({
+          model: this.config.model,
+          input: this.buildInput(request),
+          system_instruction: SYSTEM_PROMPT,
+          generation_config: {
+            // NOTE: the Interactions API GenerationConfig has no `temperature`; the
+            // schema below + a system prompt that forbids invention keep the output
+            // deterministic and classify-only.
+            max_output_tokens: this.config.maxTokens,
+          },
+          // Structured JSON output enforced by the API rather than prompt-only.
+          response_format: {
+            type: 'text',
+            mime_type: 'application/json',
+            schema: RESPONSE_SCHEMA,
+          },
+          // Stateless single turn: nothing is retained server-side.
+          store: false,
+        });
+      } catch (error) {
+        lastError = error;
+        if (!isTransientProviderError(error) || attempt === maxAttempts) {
+          throw error;
+        }
+        const delayMs = retryDelayMs(error, attempt);
+        logger.warn({
+          ingestionId: request.ingestionId,
+          provider: 'gemini',
+          model: this.config.model,
+          attempt,
+          maxAttempts,
+          delayMs,
+          errorName: error instanceof Error ? error.name : typeof error,
+        }, 'Gemini question understanding request failed transiently; retrying');
+        await sleep(delayMs);
+      }
+    }
+
+    throw lastError;
   }
 
   /**

@@ -210,9 +210,14 @@ export default function SoruGetir({ onNavigate }: SoruGetirProps) {
       });
 
       setProgressIndex(2);
-      await transitionIngestion(ingestionId, 'MAPPED').catch(async () => {
-        await transitionIngestion(ingestionId, 'REVIEW_REQUIRED').catch(() => undefined);
-      });
+      // The student journey produces a canonical Question from the REVIEW_REQUIRED
+      // state (the documented student path: the produced Question stays
+      // UNVERIFIED and isActive=false, and a human reviewer acts on it later).
+      // MAPPED/ANALYZED are NOT reviewed states, so the backend intentionally
+      // refuses canonical creation from them. Moving to REVIEW_REQUIRED first is
+      // idempotent when the analysis already ended there — a no-op transition
+      // fails and is swallowed, leaving the state unchanged.
+      await transitionIngestion(ingestionId, 'REVIEW_REQUIRED').catch(() => undefined);
 
       const canonical = await createCanonicalQuestion(ingestionId);
       setQuestionId(canonical.question.id);

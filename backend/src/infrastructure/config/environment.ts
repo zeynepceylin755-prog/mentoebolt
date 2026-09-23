@@ -73,8 +73,16 @@ const envSchema = z.object({
   QUESTION_UNDERSTANDING_MAX_RETRIES: z.string().default('2'),
   // Phase 7.1 (cost control): bounded output tokens and a bounded normalized-text
   // input size, so neither the prompt nor the completion is unbounded.
-  QUESTION_UNDERSTANDING_MAX_TOKENS: z.string().default('1024'),
-  QUESTION_UNDERSTANDING_MAX_INPUT_CHARS: z.string().default('8000'),
+  //
+  // Phase 7.5/7.6: this value is deliberately OPTIONAL rather than defaulted here.
+  // The earlier `.default('1024')` always supplied a string, which silently
+  // OVERRODE the question-understanding config layer's own DEFAULT_MAX_TOKENS
+  // (raised to 8192 to cover the model's internal thinking tokens). Production
+  // therefore kept truncating Gemini JSON mid-string with "Unterminated string in
+  // JSON". Leaving it unset lets the config layer own the default; an explicit
+  // env value still wins.
+  QUESTION_UNDERSTANDING_MAX_TOKENS: z.string().optional(),
+  QUESTION_UNDERSTANDING_MAX_INPUT_CHARS: z.string().optional(),
   QUESTION_UNDERSTANDING_BASE_URL: z.string().default('https://api.openai.com/v1'),
   QUESTION_UNDERSTANDING_ALLOW_EXTERNAL_PROVIDER: z.string().default('false'),
   // Phase 7.4: Gemini API key for question understanding

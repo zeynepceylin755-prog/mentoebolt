@@ -508,17 +508,29 @@ export class QuestionIngestionService {
     // APPROVED is structurally unreachable because their trust ceiling sits below
     // HUMAN_APPROVED. Pre-review states (NORMALIZED / ANALYZED / MAPPED) are never
     // sufficient, so the human review gate is never bypassed.
+    //
+    // Phase 7.6: a STUDENT ingestion created through the public API carries NO
+    // sourceId, so its origin is null. A null origin is NOT auto-promotable
+    // (isAutoPromotableOrigin(null) === false) and, when the ingestion is owned by
+    // a student, it is exactly the STUDENT_UPLOADED case this branch exists for.
+    // The previous `origin !== null` guard rejected every such ingestion, so the
+    // student journey could never produce a canonical Question and the frontend
+    // showed "Soruyu şu anda analiz edemedik" even though analysis had succeeded.
+    // The gate below is otherwise unchanged: REVIEW_REQUIRED only, non-auto-
+    // promotable origin only, and the produced Question stays UNVERIFIED/
+    // isActive=false.
     const origin: QuestionOrigin | null = ingestion.source?.origin ?? null;
+    const isStudentOwned = Boolean(ingestion.ingestedByUserId);
     const isReviewedState =
       ingestion.state === INGESTION_STATES.APPROVED ||
       (ingestion.state === INGESTION_STATES.REVIEW_REQUIRED &&
-        origin !== null &&
+        (origin !== null || isStudentOwned) &&
         !isAutoPromotableOrigin(origin));
 
     if (!isReviewedState) {
       throw new QuestionCreationBlockedError(
         `ingestion is in state ${ingestion.state}; a reviewed state (APPROVED` +
-          (origin !== null && !isAutoPromotableOrigin(origin)
+          (ingestion.state === INGESTION_STATES.REVIEW_REQUIRED
             ? ' or REVIEW_REQUIRED for non auto-promotable origins'
             : '') +
           ') is required to produce a canonical Question'
