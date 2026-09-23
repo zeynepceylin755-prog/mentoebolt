@@ -155,8 +155,17 @@ export default function SoruGetir({ onNavigate }: SoruGetirProps) {
       if (err.status === 401 || err.status === 403) {
         return 'Oturumun sona ermiş görünüyor. Tekrar giriş yapman gerekiyor.';
       }
+      if (err.status === 429) {
+        return 'Şu anda çok fazla istek var. Kısa bir mola verip tekrar deneyebilirsin.';
+      }
       if (err.status === 413) {
         return 'Dosya yüklemek için çok büyük. Daha küçük bir fotoğrafla tekrar dene.';
+      }
+      // 503 (AI_PROVIDER_UNAVAILABLE): the analysis service is temporarily busy
+      // (provider rate limit or a short outage). This is recoverable, so say so
+      // instead of implying the question can never be analysed.
+      if (err.status === 503 || err.code === 'AI_PROVIDER_UNAVAILABLE') {
+        return 'Analiz servisi şu anda yoğun. Kısa bir süre sonra tekrar deneyebilirsin.';
       }
       if (err.status >= 500) {
         return 'Soruyu şu anda analiz edemedik. Bir sorun oluştu, tekrar deneyebilirsin.';

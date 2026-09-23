@@ -22,6 +22,7 @@ import {
   OcrProviderError,
   NormalizationError,
   AiAnalysisError,
+  ProviderUnavailableError,
   ProposalValidationError,
 } from '../../../domain/errors/QuestionAnalysisErrors.js';
 import { requiresReview } from '../../../domain/ingestion/confidencePolicy.js';
@@ -68,6 +69,26 @@ function inferImageMimeType(data: Buffer): string | null {
   }
   if (data.length >= 6 && data[0] === 0x47 && data[1] === 0x49 && data[2] === 0x46) return 'image/gif';
   return null;
+}
+
+/**
+ * True when an AI provider failure means "come back later" rather than "this
+ * analysis is broken": rate limiting, quota exhaustion, or a transient outage.
+ *
+ * Detection is name/message-shape based and never logs or forwards the raw
+ * provider text. It exists so the student sees a retryable message instead of a
+ * permanent-looking failure when the provider is simply busy.
+ */
+function isProviderUnavailable(error: unknown): boolean {
+  if (!error) {
+    return false;
+  }
+  const name = error instanceof Error ? error.name : '';
+  const message = error instanceof Error ? error.message : String(error);
+  const haystack = `${name} ${message}`;
+  return /ratelimit|resource_exhausted|resourceexhausted|quota|429|503|overloaded|unavailable|temporar/i.test(
+    haystack
+  );
 }
 
 export const ANALYSIS_AUDIT_ACTIONS = {
@@ -161,7 +182,7 @@ export class QuestionAnalysisService {
 
   /**
    * Analyze a question ingestion through the full pipeline.
-   * 
+   *
    * Pipeline:
    * 1. OCR (if needed)
    * 2. Normalization
@@ -513,6 +534,19 @@ export class QuestionAnalysisService {
           microSkillCandidatesCreated: 0,
         };
       } catch (error) {
+        // Classify an exhausted/limited provider (rate limit, quota) separately so
+        // the student gets a retryable "busy" signal instead of a generic failure.
+        // The raw provider text remains in the server logs; the client sees only a
+        // provider-generic message.
+        if (isProviderUnavailable(error)) {
+          logger.warn(
+            { ingestionId, errorName: error instanceof Error ? error.name : typeof error },
+            'Question understanding provider is temporarily unavailable'
+          );
+          throw new ProviderUnavailableError(
+            'The question analysis service is busy right now. Please try again shortly.'
+          );
+        }
         throw new AiAnalysisError(`AI analysis failed: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
